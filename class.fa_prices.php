@@ -16,6 +16,9 @@ include_once($path_to_root . "/workcenters/includes/workcenters_db.inc");
 /********************************************************//**
  * Various modules need to be able to add or get info about workcenters from FA
  *
+ *	Mantis 2918 Select prices updated since a given date
+ *
+ *
  *	This class uses FA specific routines (display_notification etc)
  *
  * **********************************************************/
@@ -28,12 +31,14 @@ class fa_prices extends table_interface
 | sales_type_id | int(11)     | NO   |     | 0       |                |
 | curr_abrev    | char(3)     | NO   |     |         |                |
 | price         | double      | NO   |     | 0       |               
+| last_updated  | timestamp   | NO   |     | current_timestamp | ON UPDATE CURRENT_TIMESTAMP()
 	*/
 	protected $id;	
 	protected $stock_id;
 	protected $sales_type_id;
 	protected $curr_abrev;
 	protected $price;
+	protected $last_updated;
 	var $min_cid;
 	var $max_cid;
 	var $errors = array();
@@ -46,14 +51,15 @@ class fa_prices extends table_interface
 		parent::__construct( $caller );
 		$descl = 'varchar(' . DESCRIPTION_LENGTH . ')';
 		$this->table_details['tablename'] = TB_PREF . 'prices';
-		$this->tablename = $this->table_details['tablename'];
 		$this->fields_array[] = array('name' => 'id', 'label' => 'Bank Account', 'type' => 'int(11)', 'null' => 'NOT NULL',  'readwrite' => 'readwrite', 'default' => '0' );
 		$this->fields_array[] = array( 'name' => 'stock_id', 'label' => '', 'type' => $descl, 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '0' );
 		$this->fields_array[] = array( 'name' => 'sales_type_id', 'label' => '', 'type' => 'int(11)', 'null' => 'NULL', 'readwrite' => 'readwrite', 'default' => '0' );
 		$this->fields_array[] = array('name' => 'curr_abrev', 'label' => 'Bank Account', 'type' => $descl, 'null' => 'NOT NULL',  'readwrite' => 'readwrite', 'default' => '0' );
 		$this->fields_array[] = array( 'name' => 'price', 'label' => '', 'type' => 'double', 'null' => 'NULL', 'readwrite' => 'readwrite', 'default' => '0' );
+		$this->fields_array[] = array( 'name' => 'last_updated', 'label' => 'Last Updated', 'type' => 'timestamp', 'null' => 'NULL', 'readwrite' => 'readwrite', 'default' => 'current_timestamp' );
 		
 		$this->table_details['primarykey'] = "id";
+		$this->from_array = array( TB_PREF . 'prices' );
 	}
 	function insert()
 	{
@@ -77,7 +83,7 @@ class fa_prices extends table_interface
 	 * @param string partial stock_id to match against
 	 * @param string ISO Currency code (from internal table)
 	 * ************************************************/
-	function add_price_multi_stock_master( /*numeric*/$sales_type, /*double*/ $price, /*stringr*/ $stock_id_match, /*ISO Code*/$currency )
+	function add_price_multi_stock_master( /*numeric*/$sales_type=1, /*double*/ $price, /*stringr*/ $stock_id_match, /*ISO Code*/$currency='CAD' )
 	{
 		//insert ignore into 1_prices (stock_id, sales_type_id,curr_abrev, price) select stock_id, 1, 'CAD', 115/1.05 from 1_stock_master where stock_id like 'hd-gh%'
 		try {
@@ -99,7 +105,10 @@ class fa_prices extends table_interface
 		}
 	}
 	/**********************************************//**
-	 * Update a set of prices by a matched stock id
+	 * Update a set of prices by a "like" matched stock id
+	 *	
+	 *	This can be used to update a series of products.
+	 *	Need to be careful that the match sku isn't too broad
 	 *
 	 * @param int sales_type_id
 	 * @param double price to set
@@ -196,13 +205,52 @@ class fa_prices extends table_interface
 		return $this->db_fetch( $res );
 	}
 	/**************************//**
+	 * Get records that have updated since a date
+	 *
+	 *	In support of Mantis 2918
+	 * 	List products that have been updated since a date
+	 *
+	 * @since 20240807
+	 *
+	 * @string date
+	 * @param string Currency Abbreviation
+	 * @param array list of sales_type_ids
+	 * @returns array
+	 * ****************************/
+	function get_price_updated_since( $updated_since, $curr_abrev = null, $sales_type_ids = array( '1' ) )
+	{
+		$this->clear_sql_vars();
+		$this->select_array = array( '*' );
+		$this->from_array = array( TB_PREF . 'prices' );
+		$this->where_array = array( 'last_updated' = array( ">" => $updated_since ) );
+		if( null !== $curr_abrev )
+		{
+			$this->where_array[] = array( 'curr_abrev' = $curr_abrev );
+		}
+		else if( isset( $this->curr_abrev ) )
+		{
+			$this->where_array[] = array( 'curr_abrev' = $this->curr_abrev );
+		}
+		if( null !== $sales_type_ids )
+		{
+			$this->where_array = array( 'sales_type_id' = array( "in" => $sales_type_id ) );
+		}
+		else if( isset( $this->$sales_type_id ) )
+		{
+			$this->where_array = array( 'sales_type_id' =>  $this->sales_type_id  );
+		}
+		$this->buildSelectQuery();
+		$res = $this->query( "Prices could not be retrieved" );
+		return $this->db_fetch( $res );
+	}
+	/**************************//**
 	 *
 	 * @internal stock_id, sales_type_id, curr_abrev
 	 * ****************************/
 	function get_stock_price()
 	{
 		$this->clear_sql_vars();
-		$this->from_array = array( TB_PREF . 'stock_master' );
+		$this->from_array = array( TB_PREF . 'prices' );
 		$this->select_array = array( '*' );
 		$this->where_array = array();
 		//$this->where_array['id'] =  $this->id;
@@ -221,7 +269,7 @@ class fa_prices extends table_interface
 	function get_prices()
 	{
 		$this->clear_sql_vars();
-		$this->from_array = array( TB_PREF . 'stock_master' );
+		$this->from_array = array( TB_PREF . 'prices' );
 		$this->select_array = array( '*' );
 		$this->where_array = array();
 		$this->where_array['id'] =  $this->id;
@@ -240,7 +288,7 @@ class fa_prices extends table_interface
 	function get_stock_price_type_currency()
 	{
 		$this->clear_sql_vars();
-		$this->from_array = array( TB_PREF . 'stock_master' );
+		$this->from_array = array( TB_PREF . 'prices' );
 		$this->select_array = array( '*' );
 		$this->where_array = array();
 		//$this->where_array['id'] =  $this->id;
@@ -252,105 +300,6 @@ class fa_prices extends table_interface
 		$res = $this->query( "Price could not be retrieved", "select" );
 		return $this->db_fetch( $res );
 	}
-	/**//*************************************************
-	* Insert a pricebook based upon a factor on an existing price
-	*
-	* @since 20241027
-	*
-	* @param string new pricebook
-	* @param string source pricebook
-	* @param float factor
-	* @return mysql_res
-	**************************************************************/
-	function insert_pricebook_from_pricebook( $to, $from, $factor )
-	{
-		$sql = "INSERT IGNORE into " . $this->tablename;
-		$sql .= "( stock_id, sales_type_id, curr_abrev, price ) ";
-		$sql .= " SELECT stock_id, ";
-		$sql .= " (select id from " . TB_PREF . "sales_types where sales_type in ( '" . $to . "' ) ), ";
-		$sql .= " curr_abrev, price * $factor ";
-		$sql .= " FROM " . $this->tablename;
-		$sql .= " WHERE sales_type_id=(select id from " . TB_PREF . "sales_types where sales_type in ( '" . $from . "' ) )";
-		display_notification( print_r( $sql, true ) );
-		$res = db_query( $sql, "Couldn't update pricebook!" );
-		return $res;
-	}
-	/**//****************************************************************
-	* Get 2 pricebook prices to compare
-	*
-	* @since 20241027
-	*
-	* @param string pricebook 1
-	* @param string pricebook 2
-	* @param string Order By default stock_id
-	* @param string stock_id (optional)
-	* @param string curr_abrev default CAD.  If NULL we ensure the 2 pricebooks are using he same curr_abrev
-	* @return array result
-	********************************************************************/
-	function compare_pricebooks( $pb1, $pb2, $orderby = "stock_id", $stock_id = null, $curr_abrev="CAD" )
-	{
-		//SELECT s.stock_id, s.price as disc, r.price as retail FROM `1_prices` s, 1_prices r where s.stock_id=r.stock_id and s.sales_type_id=3 and r.sales_type_id=1 order_by stock_id
-		$this->clear_sql_vars();
-		$this->from_array = array( $this->tablename . " t1", $this->tablename . " t2" );
-		$this->select_array = array( 't1.stock_id', 't1.price', 't2.price' );
-		$this->where_array = array();
-		$this->where_array[] =  't1.stock_id=t2.stock_id';
-		$this->where_array[] =  "t1.sales_type_id='" . $this->get_sales_type_id_from_name_SQL( $pb1 ) . "'";
-		$this->where_array[] =  "t2.sales_type_id='" . $this->get_sales_type_id_from_name_SQL( $pb2 ) . "'";
-		$this->where_array[] =  "t1.curr_abrev=t2.curr_abrev";
-		if( null !== $curr_abrev )
-		{
-			$this->where_array[] =  "t1.curr_abrev='" . $curr_abrev . "'";
-		}
-		if( null !== $stock_id )
-		{
-			$this->where_array[] = "t1.stock_id ='" .  $stock_id . "'";
-		}
-		if( null !== $orderby )
-		{
-			switch( $orderby )
-			{
-				case 'stock_id':
-				case 'price':
-					$this->orderby_array[] = $orderby;
-					break;
-				default:
-					$this->orderby_array[] = "stock_id";
-					break;
-			}
-		}
-		$this->buildSelectQuery();
-		$res = $this->query( "Price could not be retrieved", "select" );
-		return $this->db_fetch( $res );
-	}
-	/**//****************************************************************
-	* Get SQL query to get sales_type_id from a string
-	*
-	* @since 20241027
-	*
-	* @param string sales_type
-	* @return string SQL query
-	********************************************************************/
-	function get_sales_type_id_from_name_SQL( $sales_type )
-	{
-		$sql = "SELECT id from " . TB_PREF . "sales_types where sales_type in ( '" . $sales_type . "' )";
-		return $sql;
-	}
-	/**//****************************************************************
-	* Get sales_type_id from a string
-	*
-	* @since 20241027
-	*
-	* @param string sales_type
-	* @return int sales_type_id
-	********************************************************************/
-	function get_sales_type_id_from_name( $sales_type )
-	{
-		$sql = $this->get_sales_type_id_from_name_SQL( $sales_type );
-		$res = db_query( $sql, "Couldn't update pricebook!" );
-		return $this->db_fetch( $res );
-	}
-
 
 }
 

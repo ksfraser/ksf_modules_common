@@ -2,13 +2,22 @@
 
 //20170608 There is something in here screwing with FAs display_notification Exception handler
 
+//display_notification( __FILE__ . "::" . __LINE__ );
+
+
 require_once( 'defines.inc.php' );	//defines path_to_faroot
-//global $path_to_faroot;
-$path_to_faroot = __DIR__ . '/../..';
+global $path_to_faroot;
+$path_to_root = "../..";
+if( strlen( $path_to_faroot ) < 3 )
+	$path_to_faroot = $path_to_root;
+//display_notification( __FILE__ . "::" . __LINE__ );
 require_once( $path_to_faroot . '/includes/db/connect_db.inc' ); //db_query, ...
+//display_notification( __FILE__ . "::" . __LINE__ );
 require_once( $path_to_faroot . '/includes/errors.inc' ); //check_db_error, ...
+//display_notification( __FILE__ . "::" . __LINE__ );
 
 require_once( 'class.origin.php' );
+//display_notification( __FILE__ . "::" . __LINE__ );
 /***************************************************************//**
  *
  * Inherits:
@@ -96,12 +105,7 @@ class db_base extends origin
 	}
 	/*bool*/ function is_installed()
 	{
-		global $db_connections;
-		if( !isset( $_SESSION["wa_current_user"] ) )
-		{
-			//chances are we are running CLI rather than web mode
-			throw new Exception( "is_installed dependencies failed.  Are we in CLI mode?", KSF_FIELD_NOT_SET );
-		}
+        	global $db_connections;
         
 		$cur_prefix = $db_connections[$_SESSION["wa_current_user"]->cur_con]['tbpref'];
 
@@ -284,44 +288,7 @@ class db_base extends origin
 		var_dump( $sql );
 		db_query( $sql, "Couldn't create table " . $table_array['tablename'] );
 	}
-	/**//****************************************************************************
-	* Replace a substring ANYWHERE within a field with a new string
-	*
-	*	https://stackoverflow.com/questions/17365222/update-and-replace-part-of-a-string
-	*		UPDATE tablename 
-	*		SET field_name = REPLACE(field_name , 'oldstring', 'newstring') 
-	*		WHERE field_name LIKE ('oldstring%');
-	*
-	* @param string table name
-	* @param string field
-	* @param string oldstring
-	* @param string newstring
-	******************************************************************************/
-	function replace_field_substring( $tablename, $field, $oldstring, $newstring )
-	{
-		$sql = "UPDATE " . $tablename . " ";
-		$sql .= "SET " . $field . " = REPLACE( " . $field . ", '" . $oldstring . "', '" . $newstring . "' ) "; 
-		$sql .= "WHERE " . $field . " LIKE '%" . $oldstring . "%'"; 
-	}
-	/**//****************************************************************************
-	* Replace a substring AT THE START OF a field with a new string
-	*
-	*	https://stackoverflow.com/questions/17365222/update-and-replace-part-of-a-string
-	*		UPDATE tablename 
-	*		SET field_name = REPLACE(field_name , 'oldstring', 'newstring') 
-	*		WHERE field_name LIKE ('oldstring%');
-	*
-	* @param string table name
-	* @param string field
-	* @param string oldstring
-	* @param string newstring
-	******************************************************************************/
-	function replace_field_start_substring( $tablename, $field, $oldstring, $newstring )
-	{
-		$sql = "UPDATE " . $tablename . " ";
-		$sql .= "SET " . $field . " = REPLACE( " . $field . ", '" . $oldstring . "', '" . $newstring . "' ) "; 
-		$sql .= "WHERE " . $field . " LIKE '" . $oldstring . "%'"; 
-	}
 
 }
+//display_notification( __FILE__ . "::" . __LINE__ );
 ?>

@@ -1,39 +1,35 @@
 <?php
 
+		//echo  __FILE__ . "::" . __LINE__  . '\n\r';
 //TODO
 //	
-//20180531 Added basic code that I had in my GENERICTABLE class from my own framework.
-//
-//20240831 This class, generictable, db_base probably all do similar things.  Time to refactor and merge?
-//	Worse is I have different versions in different app trees.
-
-require_once( 'defines.inc.php' );
-
+/* 20240918 Disabling for troubleshooting.
 global $path_to_root;
-if( !isset( $path_to_root ) )
-	$path_to_root = '../..';
 require_once( $path_to_root . "/includes/db/connect_db.inc" );	//db_escape
+*/
 
+		//echo  __FILE__ . "::" . __LINE__  . '\n\r';
 /*****************************************************************************************//**
  * Base class to provide basic SQL functions
  *
  * Provides:
-        function get( $field )
-        /*@bool@* /function set( $field, $value = null )
-        /*@bool@* /function validate( $data_value, $data_type )
-        /*none* /function select_row( $set_caller = false )
-        /*@mysql_result@* /function select_table($fieldlist = "*", /*@array@* /$where = null, /*@array@* /$orderby = null, /*@int@* /$limit = null)
-        function delete_table()
-        function update_table()
-        /*@bool@* /function check_table_for_id()
-        /*@int@* /function insert_table()
-        function create_table()
-        function alter_table()
-        /*@int@* /function count_rows()
-        /*@int@* /function count_filtered($where = null)
-        /*string* /function getPrimaryKey()
-        /*none* /function getByPrimaryKey()
-	
+*	function select_table($fieldlist = "*", $where = null, $orderby = null, $limit = null)
+*        function update_table()
+*        function check_table_for_id()
+*        function insert_table()
+*        function create_table()
+*        function alter_table()
+*        function count_rows()
+*        function count_filtered($where)
+*
+*        function get( $field )
+*        function set( $field, $value = null, $enforce = false )
+*        function validate( $data_value, $data_type )
+*        function select_row( $set_caller = false )
+*        function delete_table()
+*        function getPrimaryKey()
+*        function getByPrimaryKey()
+*
  * 
  *
  * *******************************************************************************************/
@@ -44,33 +40,11 @@ class table_interface
 	var $properties_array;	//!< array
 	var $fields_array;	//!< array
 	var $caller;
-	/***GENERICTABLE***/
-	var $select_array;
-	var $from_array;
-	var $where_array;
-	var $groupby_array;
-	var $having_array;
-	var $orderby_array;
-	var $sort_dir;			//!< ASC or DESC
-	var $limit;
-	var $limit_startrow;		//!< int to build a LIMIT statement - which row to start at (multi-page)
-	var $limit_numberrows;		//!< int to build a LIMIT statement - how many rows to return
-	var $number_rows_affected;
-	var $querytime;
-	var $join_array;
-	protected $select_clause;	//!< string SQL sub-string (clause)
-	protected $from_clause;		//!< string SQL sub-string (clause)
-	protected $where_clause;	//!< string SQL sub-string (clause)
-	protected $groupby_clause;	//!< string SQL sub-string (clause)
-	protected $having_clause;	//!< string SQL sub-string (clause)
-	protected $orderby_clause;	//!< string SQL sub-string (clause)
-	protected $limit_clause;	//!< string SQL sub-string (clause)
-	protected $join_clause;
-	protected $query_result;
-	/***!GENERICTABLE***/
-
 	function __construct( $caller = null )
 	{
+		//display_notification( __FILE__ . "::" . __LINE__ );
+		//echo  __FILE__ . "::" . __LINE__  . '\n\r';
+
 		$this->db_insert_id = null;
 		if( !isset( $this->table_details ) )
 			$this->table_details = array();
@@ -78,8 +52,7 @@ class table_interface
 			$this->properties_array = array();
 		if( null !== $caller )
 			$this->caller = $caller;
-		$this->fields_array = array( array( "name" => "fields_array", "type" => "array" ) );
-		
+		//display_notification( __FILE__ . "::" . __LINE__ );
 
 	}
 	/********************************************************//**
@@ -91,7 +64,7 @@ class table_interface
 		if( isset( $this->$field ) )
 			return $this->$field;
 		else
-			throw new Exception( __METHOD__ . "  Field " . $field . " not set.  Can't GET", KSF_FIELD_NOT_SET );
+			throw new Exception( __METHOD__ . "  Field not set.  Can't GET", KSF_FIELD_NOT_SET );
 	}
 	/*********************************************//**
 	 * Set a variable.  Throws exceptions on sanity checks
@@ -99,36 +72,41 @@ class table_interface
 	 * 
 	 * @param field string Variable to be set
 	 * @param value ... value for variable to be set
+	 * @param bool
 	 * @return bool Did we set the value
 	 * **********************************************/
-	/*@bool@*/function set( $field, $value = null )
+	/*@bool@*/function set( $field, $value = null, $enforce = false )
 	{
 		//display_notification( __FILE__ . "::" . __CLASS__ . "::"  . __METHOD__ . ":" . __LINE__, "WARN" );	
 		if( !isset( $field )  )
-			throw new Exception( "Fields not set", KSF_FIELD_NOT_SET );
+			throw new Exception( "Fields not set" );
 		if( ! isset( $this->fields_array ) )
-			debug_print_backtrace();
-		//display_notification( __FILE__ . "::" . __LINE__ . "::" . print_r( $this->fields_array , true ) );
-		foreach( $this->fields_array as $row )
 		{
-			if( $field == $row['name'] )
+			debug_print_backtrace();
+		}
+		else
+		{
+			foreach( $this->fields_array as $row )
 			{
-				try
+				if( $field == $row['name'] )
 				{
-					$this->validate( $value, $row['type'] );
-					$this->$field = $value;
-					return TRUE;
+					try
+					{
+						$this->validate( $value, $row['type'] );
+						$this->$field = $value;
+						return TRUE;
+					}
+					catch(InvalidArgumentException $e)
+					{
+						display_error( $e->getMessage() );
+					}
+					catch( Exception $e )
+					{
+						display_notification( $e->getMessage() );
+					}
 				}
-				catch(InvalidArgumentException $e)
-				{
-					display_error( $e->getMessage() );
-				}
-				catch( Exception $e )
-				{
-					display_notification( $e->getMessage() );
-				}
+				
 			}
-			
 		}
 		throw new Exception( "Variable <i><b>" . $field . "</b></i> to be set is not a member of the class", KSF_FIELD_NOT_CLASS_VAR );
 	}
@@ -159,7 +137,6 @@ class table_interface
 					throw new InvalidArgumentException("Expected Boolean.  Received " . $data_value);
 					break;	//fall out of switch and return false
 			case 'string':
-				break;
 			case 'digit':
 				if( $data_value >= 0 AND $data_value <= 9 ) return true;
 				break;	//fall out of switch and return false
@@ -202,9 +179,9 @@ class table_interface
 		if( isset( $this->table_details['primarykey'] ) )
 			$key = $this->table_details['primarykey'];
 		else
-			throw new Exception( "Primary Key not defined.  This function uses that field in the query", KSF_PRIKEY_NOT_DEFINED );
+			throw new Exception( "Primary Key not defined.  This function uses that field in the query" );
 		if( ! isset( $this->$key ) )
-			throw new Exception( "Primary Key not set.  Required Field for this function", KSF_PRIKEY_NOT_SET );
+			throw new Exception( "Primary Key not set.  Required Field for this function" );
 		$sql = "SELECT * from `" . $this->table_details['tablename'] . "` WHERE $key='" . $this->$key . "'";
 		$res = db_query( $sql, "Couldn't select from " . $this->table_details['tablename'] );
 		$row = db_fetch( $res );
@@ -304,12 +281,6 @@ class table_interface
 		$res = db_query( $sql, "Couldn't select from " . $this->table_details['tablename'] );
 		return $res;
 	}
-	function query( $msg )
-	{
-		$this->query_result = db_query( $this->sql, $msg );
-		return $this->query_result;
-	}
-
 	/***************************************************************************************//**
 	 * Delete a row in the table as long as the prikey has a value set
 	 *
@@ -397,7 +368,7 @@ class table_interface
 		return FALSE;
 	}
 	/*******************************************************************************************************//**
-	 * Using list of fields from field_array, build insert statement and then insert.
+	 * Insert data from this class into a table.
 	 *
 	 * This function uses mysql_real_escape_string which is depreciated in 5.5 and removed in php 7.
 	 * @return int Index of last insert
@@ -406,6 +377,14 @@ class table_interface
 	/*@int@*/function insert_table()
 	{
 		//display_notification( __FILE__ . "::" . __CLASS__ . "::"  . __METHOD__ . ":" . __LINE__, "WARN" );
+		if( empty( $this->table_details['tablename'] ) )
+		{
+			throw new Exception( "table_details['tablename'] not set.  Can't run query" );
+		}
+		if( empty( $this->fields_array ) )
+		{
+			throw new Exception( "fields_array not set.  Can't build query" );
+		}
 		global $db_connection;
 		$sql = "INSERT IGNORE INTO `" . $this->table_details['tablename'] . "`" . "\n";
 		$fieldcount = 0;
@@ -429,7 +408,6 @@ class table_interface
 		$values .= ")";
 		$sql .= $fields . $values;
 		//var_dump( $sql );
-		//display_notification( __FILE__ . "::" . __LINE__ . "::" . print_r( $sql, true ) );
 		if( $fieldcount > 0 )
 			db_query( $sql, "Couldn't insert into table " . $this->table_details['tablename'] . " for " .  $sql );	
 		else
@@ -444,7 +422,7 @@ class table_interface
 			if( method_exists( $this->define_table() ) )
 				$this->define_table();
 			else
-				throw new Exception( "Table Definition not defined so can't create table", KSF_TABLE_NOT_DEFINED );
+				throw new Exception( "Table Definition not defined so can't create table" );
 		}
 		$sql = "CREATE TABLE IF NOT EXISTS `" . $this->table_details['tablename'] . "` (" . "\n";
 		$fieldcount = 0;
@@ -593,10 +571,7 @@ class table_interface
 	}
 	/*string*/function getPrimaryKey()
 	{
-		if( isset( $this->table_details['primarykey'] ) )
-			return $this->table_details['primarykey'];
-		else
-			throw new Exception( "Primary Key Not Set", KSF_PRIKEY_NOT_DEFINED );
+		return $this->table_details['primarykey'];
 	}
 	/*none*/function getByPrimaryKey()
 	{
@@ -610,409 +585,6 @@ class table_interface
 		*/
 		$this->select_row();
 	}
-	/***GENERICTABLE***/
-	/*****************************************//**
-	 * Build the LIMIT clause
-	 *
-	 * adapted from legacy GENERICTABLE
-	 *
-	 * @param NONE but uses internal variables
-	 * @return NONE but sets limit
-	 * *****************************************/
-	function buildLimit()
-	{
-		if( (strlen( $this->limit_startrow ) < 1) 
-			OR ($this->limit_startrow < 0) 
-		  )
-		{
-			$this->limit_startrow = 0;
-		}
-		if( strlen( $this->limit_numberrows ) > 0 )
-		{
-			//If no upper set, don't set a limit
-			$this->limit = (int)$this->limit_startrow - 1 . "," . (int)$this->limit_numberrows;
-		}
-		$this->limit_clause = $this->limit;
-	}
-	/*****************************************//**
-	 * Build the SELECT clause
-	 *
-	 * adapted from legacy GENERICTABLE
-	 *
-	 * @param bool should we check the table definition that all variables are in it.  Prevents joined selects.
-	 * @param NONE but uses internal variables
-	 * @return NONE but sets limit
-	 * *****************************************/
-	function buildSelect( $b_validate_in_table = false)
-	{
-		/**/
-		if( null === $this->select_array )
-			throw new Exception( "Required Field not set", KSF_FIELD_NOT_SET );
-		$fieldcount = 0;
-		$sql = "";
-		foreach( $this->select_array as $val )
-		{
-			if( $b_validate_in_table )
-			{
-				
-				//if( $val != "*"  AND ! in_array( $tabledef, $val ) )
-				//	throw new Exception( "Select variable not in table definition", KSF_FIELD_NOT_CLASS_VAR );
- 		
-			}
-			if( 0 < $fieldcount )
-				$sql .= ", ";
-			$sql .= $val;
-			$fieldcount++;
-		}
-		$this->select_clause = "SELECT " . $sql;
- 		/**/
-	}	
-	/*****************************************//**
-	 * Build the FROM clause
-	 *
-	 * adapted from legacy GENERICTABLE
-	 *
-	 * @param bool should we check the table definition that all variables are in it.  Prevents joined selects.
-	 * @param NONE but uses internal variables
-	 * @return NONE but sets limit
-	 * *****************************************/
-	function buildFrom()
-	{
-		/**/
-		if( null === $this->from_array )
-			throw new Exception( "Required Field not set", KSF_FIELD_NOT_SET );
-		$fieldcount = 0;
-		$sql = "";
-		foreach( $this->from_array as $val )
-		{
-			if( 0 < $fieldcount )
-				$sql .= ", ";
-			$sql .= $val;
-			$fieldcount++;
-		}
-		$this->from_clause = " FROM " . $sql;
- 		/**/
-	}	
-	/*****************************************//**
-	 * Build the WHERE clause
-	 *
-	 * adapted from legacy GENERICTABLE
-	 *
-	 * @param bool should we check the table definition that all variables are in it.  Prevents joined selects.
-	 * @param NONE but uses internal variables
-	 * @return NONE but sets limit
-	 * *****************************************/
-	function buildWhere( $b_validate_in_table = false)
-	{
-		/**/
-		if( null === $this->where_array )
-			throw new Exception( "Required Field not set", KSF_FIELD_NOT_SET );
-		$fieldcount = 0;
-		$sql = "";
-		if( isset( $this->where_array ) AND is_array( $this->where_array ) )
-		{
-			foreach( $this->where_array as $col => $val )
-			{
-				if( $b_validate_in_table )
-				{
-					
-				//	if( $val != "*"  AND ! in_array( $tabledef, $val ) )
-				//		throw new Exception( "Select variable not in table definition", KSF_FIELD_NOT_CLASS_VAR );
- 				
-				}
-				if( 0 < $fieldcount )
-					$sql .= " and ";
-				$sql .= "$col = '$val' ";
-				$fieldcount++;
-			}
-		}
-		$this->where_clause = " WHERE " . $sql;
- 		/**/
-	}	
-	/*****************************************//**
-	 * Build the ORDERBY clause
-	 *
-	 * adapted from legacy GENERICTABLE
-	 *
-	 * @param bool should we check the table definition that all variables are in it.  Prevents joined selects.
-	 * @param NONE but uses internal variables
-	 * @return NONE but sets limit
-	 * *****************************************/
-	function buildOrderBy( $b_validate_in_table = false)
-	{
-		/**/
-		if( null === $this->orderby_array )
-			throw new Exception( "Required Field not set", KSF_FIELD_NOT_SET );
-		$fieldcount = 0;
-		$sql = "";
-		if( isset( $this->orderby_array ) AND is_array( $this->orderby_array ))
-		{
-			foreach( $this->orderby_array as $col )
-			{
-				if( $b_validate_in_table )
-				{
-					
-				//	if( $col != "*"  AND ! in_array( $tabledef, $col ) )
-				//		throw new Exception( "Select variable not in table definition", KSF_FIELD_NOT_CLASS_VAR );
- 				
-				}
-				if( 0 < $fieldcount )
-					$sql .= ", ";
-				$sql .= " '$col' ";
-				$fieldcount++;
-			}
-		}
-		$this->orderby_clause = " ORDER BY " . $sql;
- 		/**/
-	}	
-	/*****************************************//**
-	 * Build the GROUPBY clause
-	 *
-	 * adapted from legacy GENERICTABLE
-	 *
-	 * @param bool should we check the table definition that all variables are in it.  Prevents joined selects.
-	 * @param NONE but uses internal variables
-	 * @return NONE but sets limit
-	 * *****************************************/
-	function buildGroupBy( $b_validate_in_table = false)
-	{
-		/**/
-		if( null === $this->groupby_array )
-			throw new Exception( "Required Field not set", KSF_FIELD_NOT_SET );
-		$fieldcount = 0;
-		$sql = "";
-		if( isset( $this->groupby_array ) AND is_array( $this->groupby_array ))
-		{
-			foreach( $this->groupby_array as $col )
-			{
-				if( $b_validate_in_table )
-				{
-					
-				//	if( $col != "*"  AND ! in_array( $tabledef, $col ) )
-				//		throw new Exception( "Select variable not in table definition", KSF_FIELD_NOT_CLASS_VAR );
- 				
-				}
-				if( 0 < $fieldcount )
-					$sql .= ", ";
-				$sql .= " '$col' ";
-				$fieldcount++;
-			}
-		}
-		$this->groupby_clause = " GROUP BY " . $sql;
- 		/**/
-	}	
-	/*****************************************//**
-	 * Build the HAVING clause
-	 *
-	 * adapted from legacy GENERICTABLE
-	 *
-	 * HAVING was added because WHERE conditions can't be used with aggregate functions.
-	 * e.g having count(orders) > 10
-	 *
-	 * @param bool should we check the table definition that all variables are in it.  Prevents joined selects.
-	 * @param NONE but uses internal variables
-	 * @return NONE but sets limit
-	 * *****************************************/
-	function buildHaving( )
-	{
-		/**/
-		if( null === $this->having_array )
-			throw new Exception( "Required Field not set", KSF_FIELD_NOT_SET );
-		$fieldcount = 0;
-		$sql = "";
-		if( isset( $this->having_array ) AND is_array( $this->having_array ))
-		{
-			foreach( $this->having_array as $col )
-			{
-				if( 0 < $fieldcount )
-					$sql .= ", ";
-				$sql .= " '$col' ";
-				$fieldcount++;
-			}
-		}
-		$this->having_clause = " HAVING " . $sql;
- 		/**/
-	}	
-	/*****************************************//**
-	 * Build the JOIN clause
-	 *
-	 * adapted from legacy GENERICTABLE
-	 *
-	 * Employees INNER JOIN Orders on employees.id = orders.employee_id
-	 * Expecting
-	 * 	array[0] = array( 'table1' => tbname,
-	 * 			'table2' => tbname,
-	 * 			'field1 => fdname,
-	 * 			'field2 => fdname,
-	 * 			'type' => INNER_JOIN /...
-	 * 			)
-	 *
-	 * @param NONE but uses internal variables
-	 * @return NONE but sets limit
-	 * *****************************************/
-	function buildJoin() 
-	{
-		/**/
-		if( null === $this->join_array )
-			throw new Exception( "Required Field not set", KSF_FIELD_NOT_SET );
-		$sql = "";
-		$joincount = 0;
-		$FIELDS = array( 'table1', 'type', 'table2', 'field1', 'field2' );
-		if( isset( $this->join_array ) AND is_array( $this->join_array ))
-		{
-			foreach( $this->join_array as $arr )
-			{
-				if( 0 < $joincount )
-					$sql .= ", ";
-				foreach( $FIELDS as $col )
-				{
-					if( isset( $arr[$col] ) )
-						$sql .= $arr[$col] . " ";
-						if( $col == 'table2' )
-							$sql .= "on ";
-						else if( $col == 'field1' )
-							$sql .= "= ";
-					else
-						throw new Exception( "Mandatory field $col not set" );
-				}
-				$joincount++;
-			}
-		}
-		$this->join_clause = $sql;
- 		/**/
-	}	
-	function buildSelectQuery( $b_validate_in_table = false )
-	{
-		/**/
-		try {
-			$this->buildSelect($b_validate_in_table);
-		} catch( Exception $e )
-		{
-			throw new Exception( "Can't select anything with invalid select criterea", $e->getCode() );
-		}
-		try {
-			$this->buildFrom($b_validate_in_table);
-		} catch( Exception $e )
-		{
-			throw new Exception( "Can't select anything with invalid FROM criterea", $e->getCode() );
-		}
-		try {
-			$this->buildWhere($b_validate_in_table);
-		} catch( Exception $e )
-		{
-						//Is this a FIELD NOT SET error or something else?  Joins are not mandatory
-			if( KSF_FIELD_NOT_SET == $e->getCode() )
-			{
-				//Not mandatory, continue
-			}
-			else
-				throw new Exception( "Can't select anything with invalid WHERE criterea", $e->getCode() );
-		}
-		try {
-			$this->buildGroupby($b_validate_in_table);
-		} catch( Exception $e )
-		{
-			//Is this a FIELD NOT SET error or something else?  Joins are not mandatory
-			if( KSF_FIELD_NOT_SET == $e->getCode() )
-			{
-				//Not mandatory, continue
-			}
-			//Invalid Groupby might not result in the right data set returned but shouldn't hard fail
-			//throw new Exception( "Can't select anything with invalid FROM criterea" );
-		}
-		try {
-			$this->buildOrderBy($b_validate_in_table);
-		} catch( Exception $e )
-		{
-			//Is this a FIELD NOT SET error or something else?  Joins are not mandatory
-			if( KSF_FIELD_NOT_SET == $e->getCode() )
-			{
-				//Not mandatory, continue
-				echo "No Orderby set";
-			}
-			else
-			{
-				//Invalid Orderby might not result in the right data set returned but shouldn't hard fail
-				throw new Exception( "Can't select anything with invalid ORDERBY criterea" );
-			}
-		}
-		try {
-			$this->buildHaving($b_validate_in_table);
-		} catch( Exception $e )
-		{
-			//Is this a FIELD NOT SET error or something else?  Joins are not mandatory
-			if( KSF_FIELD_NOT_SET == $e->getCode() )
-			{
-				//Not mandatory, continue
-				echo "No HAVING set";
-			}
-			else
-			{
-				//Invalid Having might not result in the right data set returned but shouldn't hard fail
-				throw new Exception( "Can't select anything with invalid HAVING criterea" );
-			}
-		}
-		try {
-			$this->buildJoin($b_validate_in_table);
-		} catch( Exception $e )
-		{
-			//Is this a FIELD NOT SET error or something else?  Joins are not mandatory
-			if( KSF_FIELD_NOT_SET == $e->getCode() )
-			{
-				//Not mandatory, continue
-				echo "No JOIN to be done!";
-			}
-			else
-			{
-			}
-		}
-		try {
-			$this->buildLimit($b_validate_in_table);
-		} catch( Exception $e )
-		{
-			//Is this a FIELD NOT SET error or something else?  Joins are not mandatory
-			if( KSF_FIELD_NOT_SET == $e->getCode() )
-			{
-				//Not mandatory, continue
-				echo "No LIMIT to set";
-			}
-			else
-			{
-			}
-		}
-		$this->sql = $this->select_clause 
-			. $this->from_clause 
-			. $this->where_clause
-			. $this->groupby_clause
-			. $this->having_clause
-			. $this->orderby_clause
-			. $this->limit_clause;
- 		/**/
-	}
-	function clear_sql_vars()
-	{
-		
-		$this->select_array = null;
-		$this->where_array = null;
-		$this->from_array = null;
-		$this->groupby_array = null;
-		$this->having_array = null;
-		$this->orderby_array = null;
-		$this->sortdir = "ASC";
-		$this->limit = "";
-		$this->limit_startrows = null; 
-		$this->limit_numberrows = null;
-		$this->select_clause = "";
-		$this->where_clause = "";
-		$this->from_clause = "";
-		$this->groupby_clause = "";
-		$this->having_clause = "";
-		$this->orderby_clause = "";
-		$this->query_results = "";
- 		
-	}
-	/***!GENERICTABLE***/
-
 }
 
 ?>

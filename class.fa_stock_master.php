@@ -1,8 +1,7 @@
 <?php
 
 $path_to_root="../..";
-//require_once( 'class.fa_origin.php' );
-require_once( 'class.table_interface.php' );
+require_once( 'class.fa_origin.php' );
 
 /********************************************************//**
  * Various modules need to be able to add or get info about customers from FA
@@ -12,148 +11,23 @@ require_once( 'class.table_interface.php' );
  *	STUB file to help use stock_master
  *
  * **********************************************************/
-//class fa_stock_master extends fa_origin
-class fa_stock_master extends table_interface
+class fa_stock_master extends fa_origin
 {
-	/*
-| Field              | Type         | Null | Key | Default | Extra |
-+--------------------+--------------+------+-----+---------+-------+
-| stock_id           | varchar(64)  | NO   | PRI |         |       |
-| category_id        | int(11)      | NO   |     | 0       |       |
-| tax_type_id        | int(11)      | NO   |     | 0       |       |
-| description        | varchar(200) | NO   |     |         |       |
-| long_description   | text         | NO   |     | NULL    |       |
-| units              | varchar(20)  | NO   |     | each    |       |
-| mb_flag            | char(1)      | NO   |     | B       |       |
-| sales_account      | varchar(15)  | NO   |     |         |       |
-| cogs_account       | varchar(15)  | NO   |     |         |       |
-| inventory_account  | varchar(15)  | NO   |     |         |       |
-| adjustment_account | varchar(15)  | NO   |     |         |       |
-| assembly_account   | varchar(15)  | NO   |     |         |       |
-| dimension_id       | int(11)      | YES  |     | NULL    |       |
-| dimension2_id      | int(11)      | YES  |     | NULL    |       |
-| actual_cost        | double       | NO   |     | 0       |       |
-| last_cost          | double       | NO   |     | 0       |       |
-| material_cost      | double       | NO   |     | 0       |       |
-| labour_cost        | double       | NO   |     | 0       |       |
-| overhead_cost      | double       | NO   |     | 0       |       |
-| inactive           | tinyint(1)   | NO   |     | 0       |       |
-| no_sale            | tinyint(1)   | NO   |     | 0       |       |
-| editable           | tinyint(1)   | NO   |     | 0       |       |
-	 *
-	 * */
 	protected $active_count;
 	var $stock_id_array;
-	var $stock_array;
-	 protected $stock_id;
-	 protected $category_id;
-	 protected $tax_type_id;
-	 protected $description;
-	 protected $long_description;
-	 protected $units;
-	 protected $mb_flag;
-	 protected $sales_account;
-	 protected $cogs_account;
-	 protected $inventory_account;
-	 protected $adjustment_account;
-	 protected $assembly_account;
-	 protected $dimension_id;
-	 protected $dimension2_id;
-	 protected $actual_cost;
-	 protected $last_cost;
-	 protected $material_cost;
-	 protected $labour_cost;
-	 protected $overhead_cost;
-	 protected $inactive;
-	 protected $no_sale;
-	 protected $editable;
 	function __construct( $prefs_db )
 	{
-		//parent::__construct( $caller );
-		parent::__construct();
-		$this->table_details['tablename'] = TB_PREF . 'stock_master';
-		$this->fields_array[] = array( 'name' => 'stock_id', 'type' => 'varchar(64)', 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' );
-		$this->fields_array[] = array( 'name' => 'category_id', 'type' => 'int(11)', 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' ); 
-		$this->fields_array[] = array( 'name' => 'tax_type_id', 'type' => 'int(11)', 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' ); 
-		$this->fields_array[] = array( 'name' => 'description', 'type' => 'varchar(200)', 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' );   
-		$this->fields_array[] = array( 'name' => 'long_description', 'type' => 'text', 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' ); 
-		$this->fields_array[] = array( 'name' => 'units', 'type' => ' varchar(20)', 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' ); 
-		$this->fields_array[] = array( 'name' => 'mb_flag', 'type' => 'char(1)', 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' ); 
-		$this->fields_array[] = array( 'name' => 'sales_account', 'type' => 'varchar(15)', 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' );
-		$this->fields_array[] = array( 'name' => 'cogs_account', 'type' => 'varchar(15)', 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' );
-		$this->fields_array[] = array( 'name' => 'inventory_account', 'type' => 'varchar(15)', 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' );
-		$this->fields_array[] = array( 'name' => 'adjustment_account', 'type' => 'varchar(15)', 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' );
-		$this->fields_array[] = array( 'name' => 'assembly_account', 'type' => 'varchar(15)', 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' ); 
-		$this->fields_array[] = array( 'name' => 'dimension_id', 'type' => 'int(11)', 'null' => 'NULL', 'readwrite' => 'readwrite', 'default' => '' ); 
-		$this->fields_array[] = array( 'name' => 'dimension2_id', 'type' => 'int(11)', 'null' => 'NULL', 'readwrite' => 'readwrite', 'default' => '' );
-		$this->fields_array[] = array( 'name' => 'actual_cost', 'type' => 'double', 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' );
-		$this->fields_array[] = array( 'name' => 'last_cost', 'type' => 'double', 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' );
-		$this->fields_array[] = array( 'name' => 'material_cost', 'type' => 'double', 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' );
-		$this->fields_array[] = array( 'name' => 'labour_cost', 'type' => 'double', 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' );
-		$this->fields_array[] = array( 'name' => 'overhead_cost', 'type' => 'double', 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' );
-		$this->fields_array[] = array( 'name' => 'inactive', 'type' => 'bool', 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' );
-		$this->fields_array[] = array( 'name' => 'no_sale', 'type' => 'bool', 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' );
-		$this->fields_array[] = array( 'name' => 'editable', 'type' => 'bool', 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' );
-		$this->table_details['primarykey'] = "stock_id";
+		//parent::__construct( $prefs_db );
+		//parent::__construct();
 	}
- 	function insert()
+	/*@bool@*/function validate()
 	{
-		$this->insert_table();
-	}
-	function update()
-	{
-		$this->update_table();
-	}
-	function getById()
-	{
-		return $this->getByPrimaryKey();
-	}
-
-	/*@bool@*/function validate($value, $type)
-	{
-	}
-	/****
-	 *
-	 * 		try {
-			$this->clear_sql_vars();
-			
-			$this->select_array = array( 'stock_id' );
-			$this->from_array = array( TB_PREF . 'stock_master' );
-			$this->where_array = array( 'stock_id' => array( "like" =>  $stock_id_match ) );
-			$this->insert_array = array();
-			$this->insert_array['...'] = "";
-			$this->buildInsertSelectQuery();
-			$this->query( "Can not insert prices for matched stock ids " . $stock_id_match, "insert");
-		} catch( Exception $e )
-		{
-			throw $e;
-		}
-	 *
-	 * ***/
-	function getAll( $active_only = true )
-	{
-		$sql = "select * from " . TB_PREF . "stock_master";
-		if( $active_only )
-			$sql .= " where inactive='0'";
-		$result = db_query( $sql , "Couldn't select stock_ids" );
-		while( ( $row = mysql_fetch_array( $result ) ) != null )
-		{
-			if( strncmp( $row['description'], '~', 1 ) == 0 )
-			{
-				//replace ~ with "DISCONTINUED"
-				$row['long_description'] .= " --DISCONTINUED";
-				$row['description'] .= " --DISCONTINUED";
-				display_notification( "Product discontinued ::" . print_r( $row, true ) );
-			} else
-			{
-				display_notification( "Product NOT discontinued ::" . print_r( $row, true ) );
-			}
-			$this->stock_array[] = $row;
-			$this->stock_id_array[] = $row["stock_id"];
-		}
 	}
 	function getStock_IDs( $active_only = true )
 	{
+
+		//$sql = "select stock_id from " . TB_PREF . "stock_master";
+		//$sql = "select * from " . TB_PREF . "stock_master where inactive='0'";
 		$sql = "select stock_id from " . TB_PREF . "stock_master";
 		if( $active_only )
 			$sql .= " where inactive='0'";
@@ -232,25 +106,6 @@ class fa_stock_master extends table_interface
 		end_table();
 		end_form();
 		return NULL;
-	}
-	/***************************************************//**
-	* Taken from inventory/manage/items.php
-	*********************************************************/
-	function display_list_table()
-	{
-	  	start_table(TABLESTYLE_NOBORDER);
-	        start_row();
-	    	stock_items_list_cells(_("Select an item:"), 'stock_id', null,
-	        	  _('New item'), true, check_value('show_inactive'));
-	        $new_item = get_post('stock_id')=='';
-	        check_cells(_("Show inactive:"), 'show_inactive', null, true);
-	        end_row();
-	        end_table();
-	        if (get_post('_show_inactive_update')) {
-	                $Ajax->activate('stock_id');
-	                set_focus('stock_id');
-	        }
-
 	}
 
 

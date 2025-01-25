@@ -12,8 +12,173 @@ require_once( $path_to_root . '/sales/includes/db/branches_db.inc' ); //add_bran
 require_once( $path_to_root . '/includes/db/crm_contacts_db.inc' ); //add_crm_*
 require_once( $path_to_root . '/includes/db/connect_db.inc' ); //db_query, ...
 require_once( $path_to_root . '/includes/errors.inc' ); //check_db_error, ...
-require_once( __DIR__ . '/class.fa_cust_branch.php' );
 
+class fa_crm_persons extends table_interface
+{
+	protected $id;
+	protected $ref;
+	protected $name;	//<@ Also in debtors_master
+	protected $name2;
+	protected $address; 	//<@ Also in debtors_master
+				//address 1&2, city, state, postal, country in 1
+	protected $phone;
+	protected $phone2;
+	protected $fax;
+	protected $email;
+	protected $lang;
+	protected $notes;	//<@ Also in debtors_master, cust_branch
+	protected $inactive;	//<@ Also in debtors_master
+
+	function __construct( $caller = null )
+	{
+		parent::__construct( $caller );
+		$descl = 'varchar(' . DESCRIPTION_LENGTH . ')';
+		$this->table_details['tablename'] = TB_PREF . get_class( $this );
+
+		$this->fields_array[] = array( 'name' => 'id', 'label' => '', 'type' => 'int(11)', 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' );
+		$this->fields_array[] = array( 'name' => 'ref', 'label' => '', 'type' => $descl, 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' );
+		$this->fields_array[] = array( 'name' => 'name', 'label' => '', 'type' => $descl, 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' );	//<@ Also in debtors_master
+		$this->fields_array[] = array( 'name' => 'name2', 'label' => '', 'type' => $descl, 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' );
+		$this->fields_array[] = array( 'name' => 'address', 'label' => '', 'type' => $descl, 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' ); 	//<@ Also in debtors_master
+				//address 1&2, city, state, postal, country in 1
+		$this->fields_array[] = array( 'name' => 'phone', 'label' => '', 'type' => $descl, 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' );
+		$this->fields_array[] = array( 'name' => 'phone2', 'label' => '', 'type' => $descl, 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' );
+		$this->fields_array[] = array( 'name' => 'fax', 'label' => '', 'type' => $descl, 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' );
+		$this->fields_array[] = array( 'name' => 'email', 'label' => '', 'type' => $descl, 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' );
+		$this->fields_array[] = array( 'name' => 'lang', 'label' => '', 'type' => $descl, 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' );
+		$this->fields_array[] = array( 'name' => 'notes', 'label' => '', 'type' => $descl, 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' );	//<@ Also in debtors_master, cust_branch
+		$this->fields_array[] = array( 'name' => 'inactive', 'label' => '', 'type' => 'bool', 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' );	//<@ Also in debtors_master
+
+		$this->table_details['primarykey'] = "id";
+	}
+
+
+}
+
+class fa_crm_contacts extends table_interface
+{
+	var $id;
+	var $person_id;
+	var $type;
+	var $action;
+	var $entity_id
+
+	function __construct( $caller = null )
+	{
+		parent::__construct( $caller );
+		$descl = 'varchar(' . DESCRIPTION_LENGTH . ')';
+		$this->table_details['tablename'] = TB_PREF . get_class( $this );
+		$this->table_details['primarykey'] = "id";
+		$this->fields_array[] = array( 'name' => 'id', 'label' => '', 'type' => $descl, 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' );
+		$this->fields_array[] = array( 'name' => 'person_id', 'label' => '', 'type' => $descl, 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' );
+		$this->fields_array[] = array( 'name' => 'type', 'label' => '', 'type' => $descl, 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' );
+		$this->fields_array[] = array( 'name' => 'action', 'label' => '', 'type' => $descl, 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' );
+		$this->fields_array[] = array( 'name' => 'entity_id', 'label' => '', 'type' => $descl, 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' );
+	}
+}
+
+class fa_debtors_master extends table_interface
+{
+
+	protected $debtor_no;	//also in cust_branch
+	protected $name;	//<@ Also in CRM_PERSONS
+				//first + last name
+	protected $address;	//<@ Also in CRM_PERSONS
+				//address 1&2, city, state, postal, country in 1
+	protected $tax_id;
+	protected $curr_code;
+	protected $sales_type;
+	protected $dimension_id;
+	protected $dimension2_id;
+	protected $credit_status;
+	protected $payment_terms;
+	protected $discount;
+	protected $pymy_discout;
+	protected $credit_limit;
+	protected $notes;	//<@ Also in CRM_PERSON, cust_branch
+	protected $inactive;	//<@ Also in CRM_PERSON
+	protected $debtor_ref;
+
+	function __construct( $caller = null )
+	{
+		parent::__construct( $caller );
+		$descl = 'varchar(' . DESCRIPTION_LENGTH . ')';
+		$this->table_details['tablename'] = TB_PREF . get_class( $this );
+		$this->table_details['primarykey'] = "debtor_no";
+		$this->fields_array[] = array( 'name' => 'debtor_no', 'label' => '', 'type' => $descl, 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' );	//also in cust_branch
+		$this->fields_array[] = array( 'name' => 'name', 'label' => '', 'type' => $descl, 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' );	//<@ Also in CRM_PERSONS
+					//first + last name
+		$this->fields_array[] = array( 'name' => 'address', 'label' => '', 'type' => $descl, 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' );	//<@ Also in CRM_PERSONS
+					//address 1&2, city, state, postal, country in 1
+		$this->fields_array[] = array( 'name' => 'tax_id', 'label' => '', 'type' => $descl, 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' );
+		$this->fields_array[] = array( 'name' => 'curr_code', 'label' => '', 'type' => $descl, 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' );
+		$this->fields_array[] = array( 'name' => 'sales_type', 'label' => '', 'type' => $descl, 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' );
+		$this->fields_array[] = array( 'name' => 'dimension_id', 'label' => '', 'type' => $descl, 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' );
+		$this->fields_array[] = array( 'name' => 'dimension2_id', 'label' => '', 'type' => $descl, 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' );
+		$this->fields_array[] = array( 'name' => 'credit_status', 'label' => '', 'type' => $descl, 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' );
+		$this->fields_array[] = array( 'name' => 'payment_terms', 'label' => '', 'type' => $descl, 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' );
+		$this->fields_array[] = array( 'name' => 'discount', 'label' => '', 'type' => $descl, 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' );
+		$this->fields_array[] = array( 'name' => 'pymy_discout', 'label' => '', 'type' => $descl, 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' );
+		$this->fields_array[] = array( 'name' => 'credit_limit', 'label' => '', 'type' => $descl, 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' );
+		$this->fields_array[] = array( 'name' => 'notes', 'label' => '', 'type' => $descl, 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' );	//<@ Also in CRM_PERSON, cust_branch
+		$this->fields_array[] = array( 'name' => 'inactive', 'label' => '', 'type' => $descl, 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' );	//<@ Also in CRM_PERSON
+		$this->fields_array[] = array( 'name' => 'debtor_ref', 'label' => '', 'type' => $descl, 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' );
+
+	}
+}
+
+class fa_cust_branch extends table_interface
+{
+	protected $branch_code;
+	protected $debtor_no;	//<@ Also in DEBTORS_MASTER
+	protected $br_name;
+	protected $br_address;
+	protected $area;
+	protected $salesman;
+	protected $contact_name;
+	protected $default_location;
+	protected $tax_group_id;
+	protected $sales_account;
+	protected $sales_discount_account;
+	protected $receivables_account;
+	protected $payment_discount_account;
+	protected $default_ship_via;
+	protected $disable_trans;
+	protected $br_post_address;
+	protected $group_no;
+	protected $notes;	//<@ Also in CRM_PERSON, debtors_master
+	protected $inactivity;
+	protected $branch_ref;
+	function __construct( $caller = null )
+	{
+		parent::__construct( $caller );
+		$descl = 'varchar(' . DESCRIPTION_LENGTH . ')';
+		$this->table_details['tablename'] = TB_PREF . get_class( $this );
+		$this->table_details['primarykey'] = "branch_code";
+
+		$this->fields_array[] = array( 'name' => 'branch_code', 'label' => '', 'type' => $descl, 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' );
+		$this->fields_array[] = array( 'name' => 'debtor_no', 'label' => '', 'type' => $descl, 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' );	//<@ Also in DEBTORS_MASTER
+		$this->fields_array[] = array( 'name' => 'br_name', 'label' => '', 'type' => $descl, 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' );
+		$this->fields_array[] = array( 'name' => 'br_address', 'label' => '', 'type' => $descl, 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' );
+		$this->fields_array[] = array( 'name' => 'area', 'label' => '', 'type' => $descl, 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' );
+		$this->fields_array[] = array( 'name' => 'salesman', 'label' => '', 'type' => $descl, 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' );
+		$this->fields_array[] = array( 'name' => 'contact_name', 'label' => '', 'type' => $descl, 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' );
+		$this->fields_array[] = array( 'name' => 'default_location', 'label' => '', 'type' => $descl, 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' );
+		$this->fields_array[] = array( 'name' => 'tax_group_id', 'label' => '', 'type' => $descl, 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' );
+		$this->fields_array[] = array( 'name' => 'sales_account', 'label' => '', 'type' => $descl, 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' );
+		$this->fields_array[] = array( 'name' => 'sales_discount_account', 'label' => '', 'type' => $descl, 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' );
+		$this->fields_array[] = array( 'name' => 'receivables_account', 'label' => '', 'type' => $descl, 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' );
+		$this->fields_array[] = array( 'name' => 'payment_discount_account', 'label' => '', 'type' => $descl, 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' );
+		$this->fields_array[] = array( 'name' => 'default_ship_via', 'label' => '', 'type' => $descl, 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' );
+		$this->fields_array[] = array( 'name' => 'disable_trans', 'label' => '', 'type' => $descl, 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' );
+		$this->fields_array[] = array( 'name' => 'br_post_address', 'label' => '', 'type' => $descl, 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' );
+		$this->fields_array[] = array( 'name' => 'group_no', 'label' => '', 'type' => $descl, 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' );
+		$this->fields_array[] = array( 'name' => 'notes', 'label' => '', 'type' => $descl, 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' );	//<@ Also in CRM_PERSON, debtors_master
+		$this->fields_array[] = array( 'name' => 'inactivity', 'label' => '', 'type' => $descl, 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' );
+		$this->fields_array[] = array( 'name' => 'branch_ref', 'label' => '', 'type' => $descl, 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' );
+
+	}
+}
 
 /************************************************************************************************//**
  *
@@ -23,14 +188,6 @@ require_once( __DIR__ . '/class.fa_cust_branch.php' );
  *		CustName
  *		cust_ref
  *
- *
- *	Refactoring to use the MODEL classes of
- *		debtors_master
- *		crm_persons
- *		crm_contacts
- *
- *	Some of the following native FA routines will be moved into the above classes
- *		durinig the refactor!
  *	Uses the following native FA routines:
  *		add_customer
  *		add_branch
@@ -39,64 +196,48 @@ require_once( __DIR__ . '/class.fa_cust_branch.php' );
  *		update_customer
  *		get_customer
  *
- *	TABLE_INTERFACE is not the right thing to extend.  This particular class should
- *	not be dealing with SQL.  It should be a controller calling other classes!
- *
  * **************************************************************************************************/
 class fa_customer extends table_interface
 {
-	protected $cust_branch;		//fa_cust_branch
-	protected $debtors_master;	//fa_debtors_master
-	protected $crm_contacts;	//fa_crm_contacts
-	protected $crm_persons;		//fa_crm_persons
+	/*
+	protected $branch;	//fa_cust_branch
+	protected $debtor;	//fa_debtors_master
+	protected $contact;	//fa_crm_contacts
+	protected $person;	//fa_crm_persons
+	 */
 
-	protected $debtor_no;	//was debtor_id				//fa_cust cust_branch  							//debtors_master
+	protected $debtor_no;	//was debtor_id
 	protected $customer_id = '';
-	protected $branch_id;						//branch_code in cust_branch??
-	protected $CustName = "";	//name + name2 from crm_persons						//cust_branch as br_name	//debtors_master
-	protected $name;									//crm_persons
-	protected $name2;									//crm_persons
-	protected $cust_ref = "";	//Customer Short Name		//crm_persons - ref			//cust_branch as branch_ref	//debtors_master as debtors_ref
-	protected $tax_id = "";	//GST No					//fa_cust							//debtors_master
-	protected $phone = "";							//fa_cust	//crm_person
-	protected $phone2 = "";							//fa_cust	//crm_person
-	protected $fax = "";							//fa_cust	//crm_person
-	protected $email = "";							//fa_cust	//crm_person
-	protected $discount;							//fa_cust							//debtors_master
-	protected $payment_terms;	//<!int													//debtors_master
-	protected $pymt_discount = "";						//fa_cust							//debtors_master
-	protected $credit_limit = "1000";					//fa_cust							//debtors_master
-	protected $curr_code = "CAD";		//Customer Currency //fa_cust									//debtors_master
-	protected $sales_type = "1";		//3-Band.  1-Retail, 4-wholesale	//PRICE LIST	//fa_cust				//debtors_master
-	protected $salesman = "2";		//Kevin								//cust_branch
-	protected $area;											//cust_branch
+	protected $branch_id;
+	protected $CustName = "";	
+	protected $cust_ref = "";	//Customer Short Name
+	protected $tax_id = "";	//GST No					//fa_cust
+	protected $phone = "";							//fa_cust
+	protected $phone2 = "";							//fa_cust
+	protected $fax = "";							//fa_cust
+	protected $email = "";							//fa_cust
+	protected $discount;							//fa_cust
+	protected $pymt_discount = "";						//fa_cust
+	protected $credit_limit = "1000";					//fa_cust
+	protected $curr_code = "CAD";		//Customer Currency //fa_cust
+	protected $sales_type = "1";		//3-Band.  1-Retail, 4-wholesale	//PRICE LIST	//fa_cust
+	protected $salesman = "2";		//Kevin
 	protected $payment_terms = "4";	//Cash					//fa_cust
-	protected $credit_status = "1";	//Good					//fa_cust							//debtors_master
-	protected $dimension_id = "20";	//General Interest			//fa_cust							//debtors_master
-	protected $dimension2_id = "4";	//Individual				//fa_cust							//debtors_master
-	protected $default_location = "KSF";									//cust_branch			
-	protected $default_ship_via = "2";	//Canada Post.  1 - Instore.	//fa_cust			//cust_branch
+	protected $credit_status = "1";	//Good					//fa_cust
+	protected $dimension_id = "20";	//General Interest			//fa_cust
+	protected $dimension2_id = "4";	//Individual				//fa_cust
+	protected $location = "KSF";
+	protected $default_ship_via = "2";	//Canada Post.  1 - Instore.	//fa_cust
 	protected $area = "2";		//CANADA				//fa_cust
 	protected $sales_area;		//country name
 	protected $tax_group = "GST";		//GST
-	protected $tax_group_id = "1";	//GST									//cust_branch
+	protected $tax_group_id = "1";	//GST
 	protected $country_code;
-	protected $sales_account;						//fa_cust			//cust_branch
-	protected $sales_discount_account;					//fa_cust			//cust_branch
-	protected $receivables_account;						//fa_cust			//cust_branch
-	protected $payment_discount_account;					//fa_cust			//cust_branch
-	protected $inactive = 0;						//fa_cust 	//crm_persons	//cust_branch			//debtors_master
-	protected $person_id;	//crm_contacts
-	protected $type;	//crm_contacts	//supplier or customer			(crm_categories)
-	protected $action;	//crm_contacts	//general/delivery/order/invoice/... 	(crm_categories)
-	protected $entity_id;	//crm_contacts	debtors_master or supplier
-	protected $address;									//crm_persons	//cust_branch (as br_address)	//debtors_master
-	protected $lang;									//crm_persons
-	protected $notes;									//crm_persons	//cust_branch			//debtors_master
-	protected $disable_trans;										//cust_branch
-	protected $br_post_address;										//cust_branch
-	protected $group_no;											//cust_branch
-	
+	protected $sales_account;						//fa_cust
+	protected $sales_discount_account;					//fa_cust
+	protected $receivables_account;						//fa_cust
+	protected $payment_discount_account;					//fa_cust
+	protected $inactive = 0;						//fa_cust
 
 	var $fieldlist = array(
 		'popup', '_focus', '_modified', '_token', 'customer_id', 'CustName',
@@ -142,7 +283,7 @@ class fa_customer extends table_interface
 		$this->fields_array[] = array( 'name' => 'credit_status', 'label' => '', 'type' => $descl, 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '1' );	//Good					//fa_cust
 		$this->fields_array[] = array( 'name' => 'dimension_id', 'label' => '', 'type' => $descl, 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '20' );	//General Interest			//fa_cust
 		$this->fields_array[] = array( 'name' => 'dimension2_id', 'label' => '', 'type' => $descl, 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '4' );	//Individual				//fa_cust
-		$this->fields_array[] = array( 'name' => 'default_location', 'label' => '', 'type' => $descl, 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => 'KSF' );
+		$this->fields_array[] = array( 'name' => 'location', 'label' => '', 'type' => $descl, 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => 'KSF' );
 		$this->fields_array[] = array( 'name' => 'default_ship_via', 'label' => '', 'type' => $descl, 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '2' );	//Canada Post.  1 - Instore.	//fa_cust
 		$this->fields_array[] = array( 'name' => 'area', 'label' => '', 'type' => $descl, 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '2' );		//CANADA				//fa_cust
 		$this->fields_array[] = array( 'name' => 'sales_area', 'label' => '', 'type' => $descl, 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' );		//country name
@@ -155,215 +296,8 @@ class fa_customer extends table_interface
 		$this->fields_array[] = array( 'name' => 'payment_discount_account', 'label' => '', 'type' => $descl, 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '' );					//fa_cust
 		$this->fields_array[] = array( 'name' => 'inactive', 'label' => '', 'type' => $descl, 'null' => 'NOT NULL', 'readwrite' => 'readwrite', 'default' => '0' );						//fa_cust
 
-
-		$this->cust_branch = new fa_cust_branch();		//fa_cust_branch
-		$this->debtors_master = new fa_debtors_master();	//fa_debtors_master
-		$this->crm_contacts = new fa_crm_contacts();		//fa_crm_contacts
-		$this->crm_persons = new fa_crm_persons();		//fa_crm_persons
-
 	}
-	/**//*************************************************
-	* Set our values.  Also set our dependant classes
-	*
-	* @param string variable
-	* @param string value
-	* @param bool enforce membership in class
-	* @returns bool success or not
-	*******************************************************/
-	function set( $var, $value, $enforce )
-	{
-		switch( $var )
-		{
-			case ('debtor_no' ):	
-				$this->cust_branch->set( $var, $value, $enforce );
-				$this->debtors_master->set( $var, $value, $enforce );
-				break;
-			case ('customer_id' ):
-				break;
-			case ('branch_id' ):	
-				//branch_code in cust_branch??
-				//$this->cust_branch->set( $var, $value, $enforce );
-				break;
-			case ('CustName' ):	
-				//name + name2 from crm_persons	
-				//cust_branch as br_name
-				$this->debtors_master->set( $var, $value, $enforce );
-				break;
-			case ('name' ):	
-				$this->crm_persons->set( $var, $value, $enforce );
-				break;
-			case ('name2' ):
-				$this->crm_persons->set( $var, $value, $enforce );
-				break;
-			case ('cust_ref' ):	
-				//Customer Short Name	
-				$this->crm_persons->set( $var, $value, $enforce ); - ref	
-				//cust_branch as branch_ref	
-				//$this->cust_branch->set( $var, $value, $enforce );
-				$this->debtors_master->set( $var, $value, $enforce );// as debtors_ref
-				break;
-			case ('tax_id' ):	
-				//GST No
-				//fa_cust							
-				$this->debtors_master->set( $var, $value, $enforce );
-				break;
-			case ('phone' ):	
-				//fa_cust
-				$this->crm_persons->set( $var, $value, $enforce );
-				break;
-			case ('phone2' ):			
-				//fa_cust	
-				$this->crm_persons->set( $var, $value, $enforce );
-				break;
-			case ('fax' ):		
-				//fa_cust
-				$this->crm_persons->set( $var, $value, $enforce );
-				break;
-			case ('email' ):	
-				//fa_cust
-				$this->crm_persons->set( $var, $value, $enforce );
-				break;
-			case ('discount' ):
-				//fa_cust	
-				$this->debtors_master->set( $var, $value, $enforce );
-				break;
-			case ('payment_terms' ):	
-				//<!int													
-				$this->debtors_master->set( $var, $value, $enforce );
-				break;
-			case ('pymt_discount' ):
-				//fa_cust	
-				$this->debtors_master->set( $var, $value, $enforce );
-				break;
-			case ('credit_limit' ):		
-				//fa_cust	
-				$this->debtors_master->set( $var, $value, $enforce );
-				break;
-			case ('curr_code' ):		
-				//Customer Currency 
-				//fa_cust	
-				$this->debtors_master->set( $var, $value, $enforce );
-				break;
-			case ('sales_type' ):		
-				//3-Band.  1-Retail, 4-wholesale	
-				//PRICE LIST	
-				//fa_cust				
-				$this->debtors_master->set( $var, $value, $enforce );
-				break;
-			case ('salesman' ):		
-				//Kevin			
-				$this->cust_branch->set( $var, $value, $enforce );
-				break;
-			case ('area' ):	
-				$this->cust_branch->set( $var, $value, $enforce );
-				break;
-			case ('payment_terms' ):	
-				//Cash					
-				//fa_cust
-				break;
-			case ('credit_status' ):	
-				//Good					
-				//fa_cust							
-				$this->debtors_master->set( $var, $value, $enforce );
-				break;
-			case ('dimension_id' ):	
-				//General Interest			
-				//fa_cust							
-				$this->debtors_master->set( $var, $value, $enforce );
-				break;
-			case ('dimension2_id' ):	
-				//Individual				
-				//fa_cust							
-				$this->debtors_master->set( $var, $value, $enforce );
-				break;
-			case ('default_location' ):						
-				$this->cust_branch->set( $var, $value, $enforce );
-				break;
-			case ('default_ship_via' ):	
-				//Canada Post.  1 - Instore.	
-				//fa_cust		
-				$this->cust_branch->set( $var, $value, $enforce );
-				break;
-			case ('area' ):		
-				//CANADA
-				//fa_cust
-				break;
-			case ('sales_area' ):		
-				//country name
-				break;
-			case ('tax_group' ):
-				//GST
-				break;
-			case ('tax_group_id' ):	
-				//GST									
-				$this->cust_branch->set( $var, $value, $enforce );
-				break;
-			case ('country_code' ):
-				break;
-			case ('sales_account' ):	
-				//fa_cust	
-				$this->cust_branch->set( $var, $value, $enforce );
-				break;
-			case ('sales_discount_account' ):	
-				//fa_cust		
-				$this->cust_branch->set( $var, $value, $enforce );
-				break;
-			case ('receivables_account' ):		
-				//fa_cust		
-				$this->cust_branch->set( $var, $value, $enforce );
-				break;
-			case ('payment_discount_account' ):	
-				//fa_cust		
-				$this->cust_branch->set( $var, $value, $enforce );
-				break;
-			case ('inactive = 0' ):						
-				//fa_cust 	
-				$this->crm_persons->set( $var, $value, $enforce );	
-				$this->cust_branch->set( $var, $value, $enforce );
-				$this->debtors_master->set( $var, $value, $enforce );
-				break;
-			case ('person_id' ):	
-				//crm_contacts
-				break;
-			case ('type' ):	
-				//crm_contacts	
-				//supplier or customer			(crm_categories)
-				break;
-			case ('action' ):	
-				//crm_contacts
-				//general/delivery/order/invoice/... 	(crm_categories)
-				break;
-			case ('entity_id' ):	
-				//crm_contacts	debtors_master or supplier
-				break;
-			case ('address' ):			
-				$this->crm_persons->set( $var, $value, $enforce );
-				//cust_branch (as br_address)	
-				//$this->cust_branch->set( $var, $value, $enforce );
-				$this->debtors_master->set( $var, $value, $enforce );
-				break;
-			case ('lang' ):		
-				$this->crm_persons->set( $var, $value, $enforce );
-				break;
-			case ('notes' ):	
-				$this->crm_persons->set( $var, $value, $enforce );	
-				$this->cust_branch->set( $var, $value, $enforce );
-				$this->debtors_master->set( $var, $value, $enforce );
-				break;
-			case ('disable_trans' ):										
-				$this->cust_branch->set( $var, $value, $enforce );
-				break;
-			case ('br_post_address' ):	
-				$this->cust_branch->set( $var, $value, $enforce );
-				break;
-			case ('group_no' ):											
-				$this->cust_branch->set( $var, $value, $enforce );
-				break;
-			default:
-				return false;
-		}
-		parent::set( $var, $value, $enforce );
-		return true;
+		
 	}
 	/*@bool@*/function validate_data()
 	{
@@ -466,12 +400,8 @@ class fa_customer extends table_interface
 		$this->add_crm_contact( 'customer', 'general', $this->customer_id );
 		return TRUE;
 	}
-	function add_customer()
+	private function add_customer()
 	{
-			// add_customer($CustName, $cust_ref, $address, $tax_id, $curr_code,
-        		//	$dimension_id, $dimension2_id, $credit_status, $payment_terms, $discount, $pymt_discount,
-        		//	$credit_limit, $sales_type, $notes)
-
 		add_customer(
 				$this->CustName,
 				$this->cust_ref,
@@ -488,34 +418,33 @@ class fa_customer extends table_interface
 				$this->sales_type,
 				$this->notes
 		);
- 		$this->customer_id =  db_insert_id();
-		return $this->customer_id;
+ 		$this->customer_id = $selected_id = $_POST['customer_id'] = db_insert_id();
 	}
-	/**//*************************************************
-	* Call add_branch in class.fa_cust_branch.php
-	*
-	* @param none user internal
-	* @return int the value from that class
-	*******************************************************/
-	function add_branch()
+	private function add_branch()
 	{
 		//Each Customer (Individual and Multi Branch Headquarters) will have one branch record with debtor_no / debtor_ref / CustName data
     		//Each branch of the Multi Branch customers will have one branch record with branch_code / branch_ref / br_name data 
-
-		$branch = new fa_cust_branch();
-       		$branch->set( "debtor_no", $this->customer_id );
-       		$branch->set( "br_name", $this->CustName );
-       		$branch->set( "cust_ref", $this->cust_ref );
-        	$branch->set( "address", $this-> );
-        	$branch->set( "area", $this->area );
-        	$branch->set( "salesman", $this->salesman );
-        	$branch->set( "tax_group_id", $this->tax_group_id );
-        	$branch->set( "default_ship_via", $this->default_ship_via );
-        	$branch->set( "notes", $this->notes );       
-        	$branch->set( "location", $this->location );       
-
-		$this->branch_id = $branch->add_branch();
-     
+                
+		add_branch(
+                       	$this->customer_id,
+			$this->CustName,
+			$this->cust_ref,
+			$this->address,
+			$this->salesman,
+			$this->area,
+			$this->tax_group_id,
+			'',
+                       	get_company_pref('default_sales_discount_act'),
+                       	get_company_pref('debtors_act'),
+                       	get_company_pref('default_prompt_payment_act'),
+                       	$this->location,
+                       	$this->address,
+        	        0,
+                        0,
+                       	$this->default_ship_via,
+                       	$this->notes
+                );
+		$this->branch_id = $selected_branch = db_insert_id();
 	}
 	private function add_crm_person()
 	{
@@ -540,8 +469,6 @@ class fa_customer extends table_interface
 	 * *******************************************************************/
 	function get_customer()
 	{
-		if( !isset( $this->customer_id ) )
-			throw new Exception( "Customer ID must be set", KSF_FIELD_NOT_SET );
 		$row = get_customer( $this->customer_id );
 		$this->CustName = $row["name"];
 		$this->cust_ref = $row["debtor_ref"];
@@ -560,115 +487,6 @@ class fa_customer extends table_interface
 		$this->inactive = $row["inactive"];
 		return;
 	}
-	/**//*******************************************************************
-	* Display a list of customers (accounts) in a drop down list
-	*
-	*	native includes/ui/ui_lists.inc
-	*	Should be calling debtors_master for the list...
-	*		function customer_list($name, $selected_id=null, $spec_option=false, $submit_on_change=false,
-	*		        $show_inactive=false, $editkey = false)
-
-	*
-	* @param string var label
-	* @returns string HTML drop down list string
-	*************************************************************************/
-	function customer_list_dropdown( $varname )
-	{
-		require_once( $path_to_root . "/includes/ui/ui_lists.inc" );
-		$html =  customer_list( $varname, null, false, true);
-		return $html;
-	}
-	/**//*******************************************************************
-	* Ask if a customer has branches
-	*
-	*	native  customer_list("partnerId_$tid", null, false, true);
-	*	Should be calling debtors_master/_branches for the list...
-	*
-	* @param int the debtor_no
-	* @returns bool does the cust have branch
-	*************************************************************************/
-	function customer_has_branches( $debtor_no )
-	{
-		$hasBranch = db_customer_has_branches( $debtor_no )
-		return $hasBranch;
-	}
-	/**//*******************************************************************
-	* Display a list of customer branches in a drop down list
-	*
-	*	native includes/ui/ui_lists.inc
-	*	Should be calling debtors_master for the list...
-	*		function customer_branches_list($customer_id, $name, $selected_id=null,
-	*		        $spec_option = true, $enabled=true, $submit_on_change=false, $editkey = false)
-	*
-	* @param int debtor_no
-	* @param string index name for DD
-	* @returns string HTML drop down list string
-	*************************************************************************/
-	function customer_branches_dropdown( $debtor_no, $varname )
-	{
-		require_once( $path_to_root . "/includes/ui/ui_lists.inc" );
-		$html = customer_branches_list($debtor_no, $varname . "_" . $debtor_no, null, false, true, true);
-		return $html;
-	}
-	/****************************************************************************
-	 ******************** Import PAYPAL *****************************************
-	 ****************************************************************************
-	 *function write_customer($email, $name, $company, $address, $phone, $fax, $currency) {
-	 *
-	 *    global $paypal_sales_type_id, $paypal_tax_group_id, $paypal_salesman, $paypal_area,
-	 *        $paypal_location, $paypal_credit_status, $paypal_shipper;
-	 *    global $SysPrefs;
-	 *
-	 *    log_message("Memory, write_customer start:".memory_get_usage());
-	 *    $customer_id = find_customer_by_email($email);
-	 *    if (empty($customer_id)) {
-	 *        $customer_id = find_customer_by_name($company);
-	 *    }
-	 *    if (empty($customer_id)) {
-	 *        //it is a new customer
-	 *        begin_transaction();
-	 *        add_customer($company, substr($company,0,30), $address,
-	 *            '', $currency, 0, 0,
-	 *            $paypal_credit_status, -1,
-	 *            0, 0,
-	 *            $SysPrefs->default_credit_limit(),
-	 *            $paypal_sales_type_id, 'PayPal');
-	 *
-	 *        $customer_id = db_insert_id();
-	 *
-	 *        add_branch($customer_id, $company, substr($company,0,30),
-	 *            $address, $paypal_salesman, $paypal_area, $paypal_tax_group_id, '',
-	 *            get_company_pref('default_sales_discount_act'), get_company_pref('debtors_act'),
-	 *            get_company_pref('default_prompt_payment_act'),
-	 *            $paypal_location, $address, 0, 0,
-	 *            $paypal_shipper, 'PayPal');
-	 *
-	 *        $selected_branch = db_insert_id();
-	 *
-	 *        $nameparts = explode(" ", $name);
-	 *        $firstname = "";
-	 *        for ($i=0; $i<(count($nameparts) - 1); $i++) {
-	 *            if (!empty($firstname)) {
-	 *                $firstname .= " ";
-	 *            }
-	 *            $firstname .= $nameparts[$i];
-	 *        }
-	 *        $lastname = $nameparts[count($nameparts)-1];
-	 *        add_crm_person('paypal', $firstname, $lastname, $address,
-	 *            $phone, '', $fax, $email, '', '');
-	 *
-	 *        add_crm_contact('customer', 'general', $selected_branch, db_insert_id());
-	 *
-	 *        commit_transaction();
-	 *    }
-	 *    else {
-	 *        $selected_branch = 0;
-	 *    }
-	 *    log_message("Memory, write_customer end:".memory_get_usage());
-	 *    return array($customer_id, $selected_branch);
-	 *}
-	 ****************************************************************************/
-
 }
 
 ?>

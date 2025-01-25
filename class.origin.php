@@ -20,13 +20,34 @@ require_once( 'defines.inc.php' );
  *
  * Provides:
 *   	function __construct( $loglevel = PEAR_LOG_DEBUG )
-*	/*@NULL@* /function set_var( $var, $value )
+*	function set_var( $var, $value )
 *	function get_var( $var )
-*	/*@array@* /function var2data()
-*	/*@array@* /function fields2data( $fieldlist )
-*	/*@NULL@* /function LogError( $message, $level = PEAR_LOG_ERR )
-*	/*@NULL@* /function LogMsg( $message, $level = PEAR_LOG_INFO )
- *
+*	function var2data()
+*	function fields2data( $fieldlist )
+*	function LogError( $message, $level = PEAR_LOG_ERR )
+*	function LogMsg( $message, $level = PEAR_LOG_INFO )
+*	function Log( $message, $level = PEAR_LOG_EMERG )
+*	function var_dump( $var, $level = PEAR_LOG_DEBUG )
+*	public function __call($method, $arguments)
+*	function __get( $prop ) {
+*	function __isset( $prop ) {
+*	function is_supported_php() {
+*	function object_var_names()
+*	function user_access( $action )
+*	function set( $field, $value = null, $enforce_only_native_vars = true )
+*	function set_var( $var, $value )
+*	function get( $field )
+*	function get_var( $var )
+*
+*	public static function getInstance()
+*	public function getIterator()
+*	function unset_var( $field )
+*	function objectvars2array()
+*	function match_tokens( $arr1, $arr2 )
+*	function obj2obj( $obj )
+*	function arr2obj( $arr )
+*	function score_matches( $field, $value )
+*	function isdiff( $key, $value )
  *
  * *********************************************************************************/
 class origin
@@ -49,8 +70,7 @@ class origin
 	protected $obj_var_name_arr;    //Array of field names in this object that need to be translated in the NVL array
 	protected $dest_var_name_arr;   //Array of field names in the DEST Object for translating.
 	protected $name_value_list;
-	private static $_instance;      //For IteratorAggregate
-
+	private static $_instance;	//For IteratorAggregate
 
 	/************************************************************************//**
 	 *constructor
@@ -63,39 +83,65 @@ class origin
 		global $db_connections;
 		if( isset( $_SESSION['wa_current_user'] ) )
 		{
-			$cu = $_SESSION['wa_current_user'];			//FrontAccounting specific
-			$compnum = $cu->company;				//FrontAccounting specific
+		        $cu = $_SESSION['wa_current_user'];                     //FrontAccounting specific
+		        $compnum = $cu->company;                                //FrontAccounting specific
 		}
 		else
 		{
-			$compnum = 0;
-			//$this->set( 'company_prefix', $compnum );	//db_base trying to set in test cases.
+		        $compnum = 0;
+		        //$this->set( 'company_prefix', $compnum );     //db_base trying to set in test cases.
 		}
 		if( isset( $db_connections[$compnum]['tbpref'] ) )
-			$this->tb_pref = $db_connections[$compnum]['tbpref'];	//FrontAccounting specific
+		        $this->tb_pref = $db_connections[$compnum]['tbpref'];   //FrontAccounting specific
 		else
-			$this->set( 'tb_pref', $compnum . "_", false );	//FrontAccounting specific
+		        $this->set( 'tb_pref', $compnum . "_", false ); //FrontAccounting specific
 		$this->loglevel = $loglevel;
 		$this->error = array();
 		$this->log = array();
 		//Set, with end of constructor values noted
 		$this->object_var_names();
-/** From accounting
- *Not all of these functions might exist yet...
- 		$this->obj_var_name_arr = array();
-	        $this->dest_var_name_arr = array();
-	        $this->name_value_list = array();
-	        if( is_array( $param_arr ) )
-	        {
-	                foreach( $param_arr as $key=>$val)
-	                {
-	                        //Set those values.  But only do native ones
-	                        $this->set( $key, $val, true );
-	                }
-	        }
-*/
-
+		$this->obj_var_name_arr = array();
+		$this->dest_var_name_arr = array();
+		$this->name_value_list = array();
+		if( is_array( $param_arr ) )
+		{
+		        foreach( $param_arr as $key=>$val)
+		        {
+		                //Set those values.  But only do native ones
+		                $this->set( $key, $val, true );
+		        }
+		}
 	}
+	/**//*******************************************
+	*
+	*
+	*	https://stackoverflow.com/questions/13421661/getting-indirect-modification-of-overloaded-property-has-no-effect-notice
+	*	Need to use 
+	*		final class XXXX implements IteratorAggregate
+	*
+	* @param none
+	* @returns object
+	*********************************************** /
+*	public static function getInstance()
+*	{
+*		if (self::$_instance == null) self::$_instance = new self();
+*		return self::$_instance;
+*	}
+	/**//*******************************************
+	*
+	*
+	*	https://stackoverflow.com/questions/13421661/getting-indirect-modification-of-overloaded-property-has-no-effect-notice
+	*	Need to use 
+	*		final class XXXX implements IteratorAggregate
+	*
+	* @param none
+	* @returns object
+	*********************************************** /
+*	public function getIterator()
+*	{
+*		// The ArrayIterator() class is provided by PHP
+*		return new ArrayIterator($this);
+*	}
 	/*********************************************************//**
 	 * Magic call method example from http://php.net/manual/en/language.types.object.php
 	 *
@@ -119,17 +165,16 @@ class origin
 	 * @param $prop
 	 *
 	 * @return mixed
-	 * /
+	 */
 	function __get( $prop ) {
 		if( ! is_array( $this->container_arr ) )
-			return NULL;
+		        return NULL;
 		if ( array_key_exists( $prop, $this->container_arr ) ) {
 		    return $this->container_arr[ $prop ];
 		}
 
 		return $this->{$prop};
 	}
-/* */
 
 	/**
 	 * Magic isset to bypass referencing plugin.
@@ -154,79 +199,84 @@ class origin
 
 		return true;
 	}
-
 	function object_var_names_old()
 	{
 		$clone = (array) $this;	    		
+			//	display_notification( __FILE__ . "::" . __LINE__ . print_r( $clone, true ) );
 		$rtn = array ();
 		//private prefixed by class name, protected by *
     		$rtn['___SOURCE_KEYS_'] = $clone;
+			//	display_notification( __FILE__ . "::" . __LINE__ . print_r( $rtn, true ) );
     		while ( list ($key, $value) = each ($clone) ) {
+				//	display_notification( __FILE__ . "::" . __LINE__ . print_r( $key, true ) );
+				//	display_notification( __FILE__ . "::" . __LINE__ . print_r( $value, true ) );
 			$aux = explode ("\0", $key);
+				//	display_notification( __FILE__ . "::" . __LINE__ . print_r( $aux, true ) );
 			$newkey = $aux[count($aux)-1];
+				//	display_notification( __FILE__ . "::" . __LINE__ . print_r( $newkey, true ) );
+				//	display_notification( __FILE__ . "::" . __LINE__ . print_r( $rtn['___SOURCE_KEYS_'][$key], true ) );
 			$rtn[$newkey] = $rtn['___SOURCE_KEYS_'][$key];
+				//	display_notification( __FILE__ . "::" . __LINE__ . print_r( $rtn, true ) );
     		}
 		$this->object_fields = $rtn;
-		//var_dump( $this->object_fields );
-		//print_r( $this->object_fields, true );
 	}
 	/**//***************************************************************
 	* Get the names of the fields within the class
 	*
-	*       The _old version also included the entire object, values
-	*       at the time of doing this.  I've left the code here above
-	*       in case I actually used it anywhere.  But I don't recall
-	*       ever using the initial values at the time of the clone.
+	* 	The _old version also included the entire object, values 
+	* 	at the time of doing this.  I've left the code here above
+	*	in case I actually used it anywhere.  But I don't recall
+	*	ever using the initial values at the time of the clone.
 	*
 	* @param none
 	* @returns array
 	******************************************************************/
 	function object_var_names()
 	{
-	        $clone = (array) $this;
-	                //      display_notification( __FILE__ . "::" . __LINE__ . print_r( $clone, true ) );
-	        $rtn = array ();
-	        $src = array ();
-	        //private prefixed by class name, protected by *
-	        while ( list ($key, $value) = each ($clone) ) {
-	                        //      display_notification( __FILE__ . "::" . __LINE__ . print_r( $key, true ) );
-	                        //      display_notification( __FILE__ . "::" . __LINE__ . print_r( $value, true ) );
-	                $aux = explode ("\0", $key);
-	                        //      display_notification( __FILE__ . "::" . __LINE__ . print_r( $aux, true ) );
-	                $newkey = $aux[count($aux)-1];
-	                        //      display_notification( __FILE__ . "::" . __LINE__ . print_r( $newkey, true ) );
-	                        //      display_notification( __FILE__ . "::" . __LINE__ . print_r( $clone[$key], true ) );
-	                if( isset( $clone[$key] ) )
-	                {
-	                        $rtn[$newkey] = $clone[$key];
-	                }
-	                else
-	                {
-	                        $rtn[$newkey] = null;
-	                }
-	                        //      display_notification( __FILE__ . "::" . __LINE__ . print_r( $rtn, true ) );
-	        }
-	        $this->object_fields = $rtn;
-	                //      display_notification( __FILE__ . "::" . __LINE__ . print_r( $rtn, true ) );
-	                //      display_notification( __FILE__ . "::" . __LINE__ . print_r( $this, true ) );
-	        return $rtn;
+		$clone = (array) $this;	    		
+			//	display_notification( __FILE__ . "::" . __LINE__ . print_r( $clone, true ) );
+		$rtn = array ();
+		$src = array ();
+		//private prefixed by class name, protected by *
+    		while ( list ($key, $value) = each ($clone) ) {
+				//	display_notification( __FILE__ . "::" . __LINE__ . print_r( $key, true ) );
+				//	display_notification( __FILE__ . "::" . __LINE__ . print_r( $value, true ) );
+			$aux = explode ("\0", $key);
+				//	display_notification( __FILE__ . "::" . __LINE__ . print_r( $aux, true ) );
+			$newkey = $aux[count($aux)-1];
+				//	display_notification( __FILE__ . "::" . __LINE__ . print_r( $newkey, true ) );
+				//	display_notification( __FILE__ . "::" . __LINE__ . print_r( $clone[$key], true ) );
+			if( isset( $clone[$key] ) )
+			{
+				$rtn[$newkey] = $clone[$key];
+			}
+			else
+			{
+				$rtn[$newkey] = null;
+			}
+				//	display_notification( __FILE__ . "::" . __LINE__ . print_r( $rtn, true ) );
+    		}
+		$this->object_fields = $rtn;
+			//	display_notification( __FILE__ . "::" . __LINE__ . print_r( $rtn, true ) );
+			//	display_notification( __FILE__ . "::" . __LINE__ . print_r( $this, true ) );
+		return $rtn;
 	}
 	//STUB until I can code module and data access...
 	function user_access( $action )
 	{
 		switch( $action )
 		{
-			case KSF_DATA_ACCESS_READ:
-			case KSF_DATA_ACCESS_WRITE:
-			case KSF_DATA_ACCESS_READWRITE:
-			case KSF_MODULE_ACCESS_READ:
-			case KSF_MODULE_ACCESS_WRITE:
-			case KSF_MODULE_ACCESS_READWRITE:
-				break;
-			case KSF_DATA_ACCESS_DENIED:
-			case KSF_MODULE_ACCESS_DENIED:
-			default:
-				throw new Exception( "User doesn't have access to the field", KSF_DATA_ACCESS_DENIED );
+		        case KSF_DATA_ACCESS_READ:
+		        case KSF_DATA_ACCESS_WRITE:
+		        case KSF_DATA_ACCESS_READWRITE:
+		        case KSF_MODULE_ACCESS_READ:
+		        case KSF_MODULE_ACCESS_WRITE:
+		        case KSF_MODULE_ACCESS_READWRITE:
+		                break;
+		        case KSF_DATA_ACCESS_DENIED:
+		        case KSF_MODULE_ACCESS_DENIED:
+		        default:
+		                throw new Exception( "User doesn't have access to the field", KSF_DATA_ACCESS_DENIED );
 		}
 		return TRUE;
 	}
@@ -241,29 +291,59 @@ class origin
 	 * **********************************************/
 	function set( $field, $value = null, $enforce_only_native_vars = true )
 	{
+		//	display_notification( __FILE__ . "::" . __LINE__ );
 		if( !isset( $field )  )
+		{
 			throw new Exception( "Fields not set", KSF_FIELD_NOT_SET );
-		try{
-			$this->user_access( KSF_DATA_ACCESS_WRITE );
-		} 
+		}
+		try 
+		{
+		        $this->user_access( KSF_DATA_ACCESS_WRITE );
+		}
 		catch (Exception $e )
 		{
-			throw new Exception( $e->getMessage, $e->getCode );
+		        throw new Exception( $e->getMessage, $e->getCode );
 		}
 
 		if( $enforce_only_native_vars )
 		{
+			if( null === $this->object_fields )
+			{
+				//How did we get here?
+				$this->object_var_names();
+			}
 			if( ! isset( $this->object_fields ) )
 			{
-				//debug_print_backtrace();
+				debug_print_backtrace();
 			}
-			else if( ! in_array( $field, $this->object_fields ) AND ! array_key_exists( $field, $this->object_fields ) )
-				throw new Exception( "Variable to set ::" . $field . ":: is not a member of the class \n" . print_r( $this->object_fields, true ), KSF_FIELD_NOT_CLASS_VAR );
+/*
+		        else if( ! in_array( $field, $this->object_fields ) AND ! array_key_exists( $field, $this->object_fields ) )
+		                throw new Exception( "Variable to set ::" . $field . ":: is not a member of the class \n" . print_r( $this->object_fields, true ), KSF_FIELD_NOT_CLASS_VAR );
+*/
+
+			//if( ! in_array( $field, $this->object_fields ) )
+			if( ! array_key_exists( $field, $this->object_fields ) )
+			{
+				throw new Exception( "Variable to set is not a member of the class: " . $field, KSF_FIELD_NOT_CLASS_VAR );
+			}
 		}
 		if( isset( $value ) )
-			$this->$field = $value;
+		{
+		        if( is_array( $this->$field ) )
+		        {
+		                //echo "**********Setting an array \r\n";
+		                $this->$field[] = $value;
+		        }
+		        else
+		        {
+		                //echo "**********Setting field $field \r\n";
+		                $this->$field = $value;
+		        }
+		}
 		else
-			throw new Exception( "Value to be set not passed in", KSF_VALUE_NOT_SET );
+		{
+		        throw new Exception( "Value to be set not passed in", KSF_VALUE_NOT_SET );
+		}
 	}
 	/*********************************************//**
 	 * Set an array variable.  Throws exceptions on sanity checks
@@ -280,58 +360,58 @@ class origin
 	 * **********************************************/
 	function set_array( $field, $value = null, $index = 0, $enforce_only_native_vars = true, $autoinc_index = false, $replace = false )
 	{
-	        if( !isset( $field )  )
-	                throw new Exception( "Fields not set", KSF_FIELD_NOT_SET );
-	        try{
-	                $this->user_access( KSF_DATA_ACCESS_WRITE );
-	        }
-	        catch (Exception $e )
-	        {
-	                throw new Exception( $e->getMessage, $e->getCode );
-	        }
-	        if( $enforce_only_native_vars )
-	        {
-	                if( ! isset( $this->object_fields ) )
-	                {
-	                        //debug_print_backtrace();
-	                        throw new Exception( "object_fields not set so can't check to enforce only_native_vars", KSF_FIELD_NOT_SET );
-	                }
-	                else if( ! in_array( $field, $this->object_fields ) AND ! array_key_exists( $field, $this->object_fields ) )
-	                        throw new Exception( "Variable to set ::" . $field . ":: is not a member of the class \n" . print_r( $this->object_fields, true ), KSF_FIELD_NOT_CLASS_VAR );
-	        }
-	        if( isset( $value ) )
-	        {
-	                if( ! is_array( $this->field ) )
-	                {
-	                        //Wrong func called.  We can either throw an exception, or call ->set instead.
-	                        $this->set( $field, $value, $enforce_only_native_vars );
-	                }
-	                else
-	                {
-	                        if( isset( $this->$field[$index] ) )
-	                        {
-	                                if( $autoinc_index )
-	                                {
-	                                        $index++;
-	                                        $this->set_array( $field, $value, $index, $enforce_only_native_vars, $autoinc_index );
-	                                }
-	                                else if( $replace )
-	                                {
-	                                        $this->$field[$index] = $value;
-	                                }
-	                                else
-	                                {
-	                                        throw new Exception( "Field ::" . $field . ":: is already set but we weren't told to replace!", KSF_VALUE_SET_NO_REPLACE );
-	                                }
-	                        }
-	                        else
-	                        {
-	                                $this->$field[$index] = $value;
-	                        }
-	                }
-	        }
-	        else
-	                throw new Exception( "Value to be set not passed in", KSF_VALUE_NOT_SET );
+		if( !isset( $field )  )
+		        throw new Exception( "Fields not set", KSF_FIELD_NOT_SET );
+		try{
+		        $this->user_access( KSF_DATA_ACCESS_WRITE );
+		}
+		catch (Exception $e )
+		{
+		        throw new Exception( $e->getMessage, $e->getCode );
+		}
+		if( $enforce_only_native_vars )
+		{
+		        if( ! isset( $this->object_fields ) )
+		        {
+		                //debug_print_backtrace();
+		                throw new Exception( "object_fields not set so can't check to enforce only_native_vars", KSF_FIELD_NOT_SET );
+		        }
+		        else if( ! in_array( $field, $this->object_fields ) AND ! array_key_exists( $field, $this->object_fields ) )
+		                throw new Exception( "Variable to set ::" . $field . ":: is not a member of the class \n" . print_r( $this->object_fields, true ), KSF_FIELD_NOT_CLASS_VAR );
+		}
+		if( isset( $value ) )
+		{
+		        if( ! is_array( $this->field ) )
+		        {
+		                //Wrong func called.  We can either throw an exception, or call ->set instead.
+		                $this->set( $field, $value, $enforce_only_native_vars );
+		        }
+		        else
+		        {
+		                if( isset( $this->$field[$index] ) )
+		                {
+		                        if( $autoinc_index )
+		                        {
+		                                $index++;
+		                                $this->set_array( $field, $value, $index, $enforce_only_native_vars, $autoinc_index );
+		                        }
+		                        else if( $replace )
+		                        {
+		                                $this->$field[$index] = $value;
+		                        }
+		                        else
+		                        {
+		                                throw new Exception( "Field ::" . $field . ":: is already set but we weren't told to replace!", KSF_VALUE_SET_NO_REPLACE );
+		                        }
+		                }
+		                else
+		                {
+		                        $this->$field[$index] = $value;
+		                }
+		        }
+		}
+		else
+		        throw new Exception( "Value to be set not passed in", KSF_VALUE_NOT_SET );
 	}
 	 /**//*******************************************
 	 * Nullify a field
@@ -340,8 +420,8 @@ class origin
 	 */
 	function unset_var( $field )
 	{
-	        $this->$field = null;
-	        unset( $this->$field );
+		$this->$field = null;
+		unset( $this->$field );
 	}
 	/***************************************************//**
 	 * Most of our existing code does not use TRY/CATCH so we will trap here
@@ -390,7 +470,7 @@ class origin
 	* @since 20240312
 	*
 	* @param none
-	* @returns array
+	* @returns array 
 	************************************************************/
 	/*@array@*/function var2data()
 	{
@@ -398,14 +478,15 @@ class origin
 		{
 			$this->data[$f] = $this->get_var( $f );
 		}
+		return $this->data;
 	}
 	/*@array@*/function fields2data( $fieldlist )
 	{
-	        foreach( $fieldlist as $field )
-	        {
-	                $this->data[$field] = $this->get_var( $field );
-	        }
-	        return $this->data;
+		foreach( $fieldlist as $field )
+		{
+		        $this->data[$field] = $this->get_var( $field );
+		}
+		return $this->data;
 	}
 	
 	/*@NULL@*/function LogError( $message, $level = PEAR_LOG_ERR )
@@ -413,6 +494,26 @@ class origin
 		if( $level <= $this->loglevel )
 			$this->errors[] = $message;
 		return;
+	}
+	/*@NULL@*/function Log( $message, $level = PEAR_LOG_EMERG )
+	{
+		//These probably should have been put in the reverse order, but for now...
+		switch( $level )
+		{
+		        case PEAR_LOG_EMERG:
+		        case PEAR_LOG_ALERT:
+		        case PEAR_LOG_CRIT:
+		        case PEAR_LOG_ERR:
+		                $this->LogError( $message, $level );
+		        case PEAR_LOG_WARNING:
+		        case PEAR_LOG_NOTICE:
+		        case PEAR_LOG_INFO:
+		        case PEAR_LOG_DEBUG:
+		                $this->var_dump( $message, 0 );
+		        default:
+		                $this->LogMsg( $message, $level );
+		                break;
+		}
 	}
 	/*@NULL@*/function LogMsg( $message, $level = PEAR_LOG_INFO )
 	{
@@ -422,38 +523,40 @@ class origin
 	}
 	/*@NULL@*/function var_dump( $var, $level = PEAR_LOG_DEBUG )
 	{
-	        if( $level <= $this->loglevel )
-	                if( is_array( $var ) )
-	                {
-	                        var_dump( get_class( $this ) );
-	                        var_dump(  $var );
-	                }
-	                else
-	                {
-	                        var_dump( get_class( $this ) . "::" . $var );
-	                }
-	        return;
+		if( $level <= $this->loglevel )
+		        if( is_array( $var ) )
+		        {
+		                var_dump( get_class( $this ) );
+		                var_dump(  $var );
+		        }
+		        else
+		        {
+		                var_dump( get_class( $this ) . "::" . $var );
+		        }
+		return;
 	}
 	/***************************************************************//**
 	* Create a Name-Value pair as part of an array.  Can replace KEYS
 	*
+	* @param none
+	* @returns array this classes vars in an array
 	******************************************************************/
 	/*@array@*/function objectvars2array()
 	{
-	        $val = array();
-	        foreach( get_object_vars( $this ) as $key => $value )
-	        {
-	                if( count( $this->dest_var_name_arr ) > 0 )
-	                {
-	                        //No point trying to convert key names if we don't have destination names to convert to.
-	                        $key = str_replace( $this->obj_var_name_arr, $this->dest_var_name_arr, $key );
-	                }
-	                //if( "id" != $key )    //Not used for CREATE but needed for UPDATE.
-	                        if( isset( $this->$key ) )
-	                                $val[] = array( "name" => $key, "value" => $this->$key );
-	        }
-	        $this->name_value_list = $val;
-	        return $val;
+		$val = array();
+		foreach( get_object_vars( $this ) as $key => $value )
+		{
+		        if( count( $this->dest_var_name_arr ) > 0 )
+		        {
+		                //No point trying to convert key names if we don't have destination names to convert to.
+		                $key = str_replace( $this->obj_var_name_arr, $this->dest_var_name_arr, $key );
+		        }
+		        //if( "id" != $key )    //Not used for CREATE but needed for UPDATE.
+		                if( isset( $this->$key ) )
+		                        $val[] = array( "name" => $key, "value" => $this->$key );
+		}
+		$this->name_value_list = $val;
+		return $val;
 	}
 	/**//************************************************************
 	* Find the token matches between arrays.  GOTCHA - Exact Match
@@ -465,10 +568,10 @@ class origin
 	*****************************************************************/
 	function match_tokens( $arr1, $arr2 )
 	{
-	        $result = array_intersect( $arr1, $arr2 );
-	        return count( $result );
+		$result = array_intersect( $arr1, $arr2 );
+		return count( $result );
 	}
-	  /**//**********************************************************************
+	/**//**********************************************************************
 	* Convert Statement class to this object
 	*
 	* @since 20240228
@@ -478,31 +581,31 @@ class origin
 	**************************************************************************/
 	function obj2obj( $obj )
 	{
-	        //      display_notification( __FILE__ . "::" . __LINE__ . print_r( $obj, true ) );
-	        if( is_array( $obj ) )
-	                return $this->arr2obj( $obj );
-	        if( ! is_object( $obj ) )
-	                throw new Exception( "Passed in data is neither an array nor an object.  We can't handle here!" );
+		//	display_notification( __FILE__ . "::" . __LINE__ . print_r( $obj, true ) );
+		if( is_array( $obj ) )
+		        return $this->arr2obj( $obj );
+		if( ! is_object( $obj ) )
+		        throw new Exception( "Passed in data is neither an array nor an object.  We can't handle here!" );
 
-	        $cnt = 0;
-	        foreach( get_object_vars($this) as $key => $value )
-	        {
-	                //      display_notification( __FILE__ . "::" . __LINE__ . " " . print_r( $key, true ) );
-	                if( isset( $obj->$key ) )
-	                {
-	                        //      display_notification( __FILE__ . "::" . __LINE__ . " $key $obj->$key" );
-	                        //$this->$key = $obj->$key;
-	                        $this->set( $key, $obj->$key );
-	                        //      display_notification( __FILE__ . "::" . __LINE__ . " " . print_r( $this->$key, true ) );
-	                        $cnt++;
-	                }
-	                else
-	                {
-	                        //      display_notification( __FILE__ . "::" . __LINE__ . " $key not set in " . print_r( $obj, true ) );
-	                }
-	        }
-	        //      display_notification( __FILE__ . "::" . __LINE__ . print_r( $this, true ) );
-	        return $cnt;
+		$cnt = 0;
+		foreach( get_object_vars($this) as $key => $value )
+		{
+		        //	display_notification( __FILE__ . "::" . __LINE__ . " " . print_r( $key, true ) );
+		        if( isset( $obj->$key ) )
+		        {
+		                //	display_notification( __FILE__ . "::" . __LINE__ . " $key $obj->$key" );
+		                //$this->$key = $obj->$key;
+		                $this->set( $key, $obj->$key );
+		                //	display_notification( __FILE__ . "::" . __LINE__ . " " . print_r( $this->$key, true ) );
+		                $cnt++;
+		        }
+		        else
+		        {
+		                //	display_notification( __FILE__ . "::" . __LINE__ . " $key not set in " . print_r( $obj, true ) );
+		        }
+		}
+		//	display_notification( __FILE__ . "::" . __LINE__ . print_r( $this, true ) );
+		return $cnt;
 	}
 	/**//**********************************************************************
 	* Convert Transaction array to this object
@@ -518,31 +621,31 @@ class origin
 	**************************************************************************/
 	function arr2obj( $arr )
 	{
-	        //      display_notification( __FILE__ . "::" . __LINE__ . print_r( $arr, true ) );
-	        if( is_object( $arr ) )
-	                return $this->obj2obj( $arr );
-	        if( ! is_array( $arr ) )
-	                throw new Exception( "Passed in data is neither an array nor an object.  We can't handle here!" );
+		//	display_notification( __FILE__ . "::" . __LINE__ . print_r( $arr, true ) );
+		if( is_object( $arr ) )
+		        return $this->obj2obj( $arr );
+		if( ! is_array( $arr ) )
+		        throw new Exception( "Passed in data is neither an array nor an object.  We can't handle here!" );
 
-	        $cnt = 0;
-	        foreach( get_object_vars($this) as $key => $value )
-	        {
-	                //      display_notification( __FILE__ . "::" . __LINE__ . " " . print_r( $key, true ) );
-	                if( isset( $arr[$key] ) )
-	                {
-	                        //      display_notification( __FILE__ . "::" . __LINE__ . " $key $arr[$key]" );
-	                        //$this->$key = $arr[$key];
-	                        $this->set( $key, $arr[$key] );
-	                        //      display_notification( __FILE__ . "::" . __LINE__ . " " . print_r( $this->$key, true ) );
-	                        $cnt++;
-	                }
-	                else
-	                {
-	                        //      display_notification( __FILE__ . "::" . __LINE__ . " $key not set in " . print_r( $arr, true ) );
-	                }
-	        }
-	        //      display_notification( __FILE__ . "::" . __LINE__ . print_r( $this, true ) );
-	        return $cnt;
+		$cnt = 0;
+		foreach( get_object_vars($this) as $key => $value )
+		{
+		        //	display_notification( __FILE__ . "::" . __LINE__ . " " . print_r( $key, true ) );
+		        if( isset( $arr[$key] ) )
+		        {
+		                //	display_notification( __FILE__ . "::" . __LINE__ . " $key $arr[$key]" );
+		                //$this->$key = $arr[$key];
+		                $this->set( $key, $arr[$key] );
+		                //	display_notification( __FILE__ . "::" . __LINE__ . " " . print_r( $this->$key, true ) );
+		                $cnt++;
+		        }
+		        else
+		        {
+		                //	display_notification( __FILE__ . "::" . __LINE__ . " $key not set in " . print_r( $arr, true ) );
+		        }
+		}
+		//	display_notification( __FILE__ . "::" . __LINE__ . print_r( $this, true ) );
+		return $cnt;
 	}
 	/**//***************************************************
 	* Score a match for a field
@@ -553,17 +656,17 @@ class origin
 	********************************************************/
 	function score_matches( $field, $value )
 	{
-	        if( isset( $this->matchscores[$field] ) )
-	        {
-	                if( isset( $this->$field ) )
-	                {
-	                        if( $this->$field == $value )
-	                        {
-	                                return $this->matchscores[$field];
-	                        }
-	                }
-	        }
-	        return 0;
+		if( isset( $this->matchscores[$field] ) )
+		{
+		        if( isset( $this->$field ) )
+		        {
+		                if( $this->$field == $value )
+		                {
+		                        return $this->matchscores[$field];
+		                }
+		        }
+		}
+		return 0;
 	}
 	/**//******************************************************
 	* Check to see if our value is different than passed in
@@ -578,11 +681,11 @@ class origin
 	**********************************************************/
 	function isdiff( $key, $value )
 	{
-	        if( $this->$key !== $value )
-	        {
-	                return true;
-	        }
-	        return false;
+		if( $this->$key !== $value )
+		{
+			return true;
+		}
+		return false;
 	}
 }
 

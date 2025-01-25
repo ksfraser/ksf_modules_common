@@ -1,51 +1,78 @@
 <?php
 
+//display_notification( __FILE__ . "::" . __LINE__ );
+
 global $path_to_root;
-require_once( $path_to_root . '/includes/ui/ui_input.inc' );
-require_once( $path_to_root . '/modules/ksf_modules_common/db_base.php' );	//Needed the ksf_modules_common otherwise a module directory local file was included.
-require_once( $path_to_root . '/modules/ksf_modules_common/defines.inc.php' );
+require_once( dirname(__FILE__) . '/db_base.php' );    //Needed the ksf_modules_common otherwise a module directory local file was included.
+require_once( dirname(__FILE__)  . '/defines.inc.php' );
+#require_once( $path_to_root . '/modules/ksf_modules_common/db_base.php' );    //Needed the ksf_modules_common otherwise a module directory local file was included.
+#require_once( $path_to_root . '/modules/ksf_modules_common/defines.inc.php' );
+
+//display_notification( __FILE__ . "::" . __LINE__ );
 
 if( ! class_exists( 'generic_fa_interface' ) )
 {
+//	display_notification( __FILE__ . "::" . __LINE__ );
 
 	/**************************************************************************************************//**
 	 *
 	 *
 	 * Function List:
-                function __construct( $host, $user, $pass, $database, $pref_tablename )
-                function eventloop( $event, $method )
-                function eventregister( $event, $method )
-                function add_submodules()
-                function module_install()
-                function install()
-                function loadprefs()
-                function updateprefs()
-                function checkprefs()
-                function call_table( $action, $msg )
-                function action_show_form()
-                function show_config_form()
-                function form_export()
-                function related_tabs()
-                function show_form()
-                function base_page()
-                function display()
-                function run()
-                function modify_table_column( $tables_array )
-                / *@fp@* /function append_file( $filename )
-                /*@fp@* /function overwrite_file( $filename )
-                /*@fp@* /function open_write_file( $filename )
-                function write_line( $fp, $line )
-                function close_file( $fp )
-                function file_finish( $fp )
-                function backtrace()
-                function write_sku_labels_line( $stock_id, $category, $description, $price )
-                function show_generic_form($form_array)
-	 * 
+	 * Inherits:	
+	*    ORIGIN
+	*	function __construct( $loglevel = PEAR_LOG_DEBUG )
+	*	function set_var( $var, $value )
+	*	function get_var( $var )
+	*	function var2data()
+	*	function fields2data( $fieldlist )
+	*	function LogError( $message, $level = PEAR_LOG_ERR )
+	*	function LogMsg( $message, $level = PEAR_LOG_INFO )
+	 *    DB_BASE
+	*	function __construct( $host, $user, $pass, $database, $prefs_tablename )
+	*	function connect_db()
+	*	function is_installed()
+	*	function set_prefix()
+	*	function create_prefs_tablename()
+	*	function mysql_query( $sql = null, $errmsg = NULL )
+	*	function set_pref( $pref, $value )
+	*	function get_pref( $pref )
+	*	function loadprefs()
+	*	function updateprefs()
+	*	function create_table( $table_array, $field_array )
+	 * Provides:
+	*    GENERIC_FA_INTERFACE
+	*	function __construct( $host, $user, $pass, $database, $pref_tablename )
+	*	function eventloop( $event, $method )
+	*	function eventregister( $event, $method )
+	*	function add_submodules()
+	*	function module_install()
+	*	function install()
+	*	function loadprefs()
+	*	function updateprefs()
+	*	function checkprefs()
+	*	function call_table( $action, $msg )
+	*	function action_show_form()
+	*	function show_config_form()
+	*	function form_export()
+	*	function related_tabs()
+	*	function show_form()
+	*	function base_page()
+	*	function display()
+	*	function run()
+	*	function modify_table_column( $tables_array )
+	*	function adjust_stock_id_lengths( $barcode_max_length, $sku_length, $stock_id )
+	*	function append_file( $filename )
+	*	function overwrite_file( $filename )
+	*	function open_write_file( $filename )
+	*	function write_line( $fp, $line )
+	*	function close_file( $fp )
+	*	function file_finish( $fp )
+	*	function backtrace()
+	*	function write_sku_labels_line( $stock_id, $category, $description, $price )
+	*	function show_generic_form($form_array)
 	 *
 	 * ****************************************************************************************************/	
 	class generic_fa_interface extends db_base
-	//class generic_fa_interface 
-	//class generic_orders
 	{
 	        var $db_Host;
 	    	var $db_User;
@@ -77,23 +104,39 @@ if( ! class_exists( 'generic_fa_interface' ) )
 		 *********************************************************************/
 		function __construct( $host, $user, $pass, $database, $pref_tablename )
 		{
+		//display_notification( __FILE__ . "::" . __LINE__ );
 			//display_notification( __FILE__ . "::" . __CLASS__ . "::"  . __METHOD__ . ":" . __LINE__, "WARN" );
 			//		echo "Generic constructor pref_tablename: $pref_tablename";
 			if( !isset( $this->debug ) )
 				$this->debug = 0;
 			if(isset( $pref_tablename ) )
 			{
+				//	display_notification( __FILE__ . "::" . __LINE__ );
+		//display_notification( __FILE__ . "::" . __LINE__ );
 				parent::__construct( $host, $user, $pass, $database, $pref_tablename );
+		//display_notification( __FILE__ . "::" . __LINE__ );
+				//	display_notification( __FILE__ . "::" . __LINE__ );
 				$this->preftable = $pref_tablename;
+				//	display_notification( __FILE__ . "::" . __LINE__ );
+		//display_notification( __FILE__ . "::" . __LINE__ );
 			        $this->loadprefs();
+		//display_notification( __FILE__ . "::" . __LINE__ );
+				//	display_notification( __FILE__ . "::" . __LINE__ );
 			}
+				//	display_notification( __FILE__ . "::" . __LINE__ );
 			$this->edit = find_submit( 'Edit', true );
+				//	display_notification( __FILE__ . "::" . __LINE__ );
 			$this->delete = find_submit( 'Delete', true );
+				//	display_notification( __FILE__ . "::" . __LINE__ );
 			//Edit OR Delete OR NOT_SET (-1)
 			$this->selected_id = ( ($this->edit >= 0) ? $this->edit : 
 						( ($this->delete >= 0) ? $this->delete : NOT_SELECTED ) );
+				//	display_notification( __FILE__ . "::" . __LINE__ );
 			$this->tabs[] = array( 'title' => 'Default Action', 'action' => 'default', 'form' => 'default_form', 'hidden' => TRUE );
+				//	display_notification( __FILE__ . "::" . __LINE__ );
 			$this->ui_class = null;
+			//display_notification( __FILE__ . "::" . __CLASS__ . "::"  . __METHOD__ . ":" . __LINE__, "WARN" );
+		//display_notification( __FILE__ . "::" . __LINE__ );
 		}
 		function eventloop( $event, $method )
 		{
@@ -176,9 +219,10 @@ if( ! class_exists( 'generic_fa_interface' ) )
 		}
 		function install()
 		{
-			//echo __FILE__ . ":" . __LINE__ . "<br />\n";	
+			//display_notification( __FILE__ . "::" . __CLASS__ . "::"  . __METHOD__ . ":" . __LINE__, "WARN" );
 			if( !isset( $this->preftable ) )
 				return;
+			//echo "<br />" . $tab['action'] . "<br />";
 			$this->create_prefs_tablename();
 	        	$this->loadprefs();
 	        	$this->checkprefs();
@@ -189,10 +233,12 @@ if( ! class_exists( 'generic_fa_interface' ) )
 		}
 		function checkprefs()
 		{
+			//display_notification( __FILE__ . "::" . __CLASS__ . "::"  . __METHOD__ . ":" . __LINE__, "WARN" );
 			$this->updateprefs();
 		}
 		function call_table( $action, $msg )
 		{
+			//display_notification( __FILE__ . "::" . __CLASS__ . "::"  . __METHOD__ . ":" . __LINE__, "WARN" );
 	                start_form(true);
 	                start_table(TABLESTYLE2, "width=40%");
 	                table_section_title( $msg );
@@ -203,10 +249,12 @@ if( ! class_exists( 'generic_fa_interface' ) )
 		}
 		function action_show_form()
 		{
+			//display_notification( __FILE__ . "::" . __CLASS__ . "::"  . __METHOD__ . ":" . __LINE__, "WARN" );
 			$this->show_config_form();
 		}
 		function show_config_form()
 		{
+			//display_notification( __FILE__ . "::" . __CLASS__ . "::"  . __METHOD__ . ":" . __LINE__, "WARN" );
 			start_form(true);
 		 	start_table(TABLESTYLE2, "width=40%");
 			$th = array("Config Variable", "Value");
@@ -336,6 +384,7 @@ if( ! class_exists( 'generic_fa_interface' ) )
 		}
 		function related_tabs()
 		{
+			//display_notification( __FILE__ . "::" . __CLASS__ . "::"  . __METHOD__ . ":" . __LINE__, "WARN" );
 			$action = $this->action;
 			/*
 			if( isset( $this->ui_class ) )
@@ -363,11 +412,14 @@ if( ! class_exists( 'generic_fa_interface' ) )
 		}
 		function show_form()
 		{
+			//display_notification( __FILE__ . "::" . __CLASS__ . "::"  . __METHOD__ . ":" . __LINE__, "WARN" );
 			$action = $this->action;
 			if( isset( $this->view ) )
 			{
+				//display_notification( __FILE__ . "::" . __CLASS__ . "::"  . __METHOD__ . ":" . __LINE__, "WARN" );
 				$this->view->action = $this->action;
 				$this->view->show_form();
+				//display_notification( __FILE__ . "::" . __CLASS__ . "::"  . __METHOD__ . ":" . __LINE__, "WARN" );
 				return;
 			}
 			/*
@@ -382,7 +434,7 @@ if( ! class_exists( 'generic_fa_interface' ) )
 					$form = $tab['form'];
 					if( $this->debug > 2 )
 						echo "<br />" . __FILE__ . ":" . __LINE__ . " " .$form . "<br />";
-					/*
+	/*
 					if( isset( $this->ui_class ) AND method_exists( $this->ui_class, $form) AND is_callable($this->ui_class->$form() ) )
 					{
 						echo "<br />" . __FILE__ . ":" . __LINE__ . " Calling UI class " .$form . "<br />";
@@ -400,6 +452,7 @@ if( ! class_exists( 'generic_fa_interface' ) )
 		}
 		function base_page()
 		{
+			//display_notification( __FILE__ . "::" . __CLASS__ . "::"  . __METHOD__ . ":" . __LINE__, "WARN" );
 			/*
 			if( isset( $this->ui_class ) )
 				page(_($this->ui_class->help_context));
@@ -423,14 +476,16 @@ if( ! class_exists( 'generic_fa_interface' ) )
 		}
 		function display()
 		{
+			//display_notification( __FILE__ . "::" . __CLASS__ . "::"  . __METHOD__ . ":" . __LINE__, "WARN" );
 			$this->base_page();
 			$this->show_form();
 			end_page();
 		}
 		function run()
 		{
+			//display_notification( __FILE__ . "::" . __CLASS__ . "::"  . __METHOD__ . ":" . __LINE__, "WARN" );
 			if ($this->found) {
-			  	$this->loadprefs();
+			        $this->loadprefs();
 			}
 			else
 			{
@@ -464,6 +519,7 @@ if( ! class_exists( 'generic_fa_interface' ) )
 					}
 				}
 			}
+	
 			//Make sure the UI has all the set values...
 			/*
 			if( isset( $this->ui_class ) )
@@ -474,7 +530,8 @@ if( ! class_exists( 'generic_fa_interface' ) )
 				}
 			}
 			 */
-			//echo __FILE__ . ":" . __LINE__ . "<br />\n"; 
+	
+	
 			$this->display();
 		}
 		/**********************************************************************************************//**
@@ -516,6 +573,70 @@ if( ! class_exists( 'generic_fa_interface' ) )
 				}
 			}
 		}
+		/**********************************************************************************************//**
+		 * Adjust stock_id lengths
+		 *
+		 * @param int barcode_max_length the longest length we want to allow
+		 * @param int $sku_length the length calculated in the calling routine
+		 * @param string sku the barcode/sku/stock_id to be adjusted
+		 * @returns string stock_id
+		 **************************************************************************************/
+		 function adjust_stock_id_lengths( $barcode_max_length, $sku_length, $stock_id )
+		 {
+			$highest_offset = $sku_length - $barcode_max_length;
+			$pieces_array = explode( "-", $stock_id );
+			//broach-d-ths-stn-pnk
+			//kilt-rs-48
+			//buckle-celtic-msg
+			//hd-ghillies-19.5-dw
+			//U-HT-B-M
+			//beermug-dancer-irish
+			//1234-5678-9012-3456	    19char
+			//1234-5678-9012-3456-7890      24char
+			$pieces_count = count( $pieces_array );
+			//zero based array
+			for( $i = $pieces_count - 1; $i > 0; $i-- )     //don't need 0, that is sku_length
+			{
+				 $chunklength[$i] = strlen( $pieces_array[$i] );
+				 if( isset( $backlength[$i + 1] ) )
+					  $backlength[$i] = $backlength[$i + 1] + $chunklength[$i] + 1;   //If we cut the sku here...
+				 else
+					  $backlength[$i] = $chunklength[$i] + 1; //missing leading separator from chunk
+			}
+			if( !isset( $backlength[1]  ) )
+				$backlength[1] = $barcode_max_length - 1;
+			if( $backlength[1] < $barcode_max_length )
+			{
+				 //19char would work
+				 $stock_id = substr( $stock_id, -$barcode_max_length );  //last 17 chars
+				 $trimcase = 1;
+			}
+			else
+			{
+				 //need to find a good middle e.g. 24char
+				 //						    4-5678-9012-3456-7
+				 if( ( $sku_length - strlen( $pieces_array[0] ) + 1 - $backlength[ $pieces_count - 1 ] + 1 ) < $barcode_max_length )
+				 {
+					  //u-balmoral-navy-75
+					  $offset = floor( (strlen( $pieces_array[0] ) + $backlength[ $pieces_count - 1 ])/2) ;
+					  if( $offset > strlen( $pieces_array[0] ) AND $pieces_count > 3 )	 //want 1 char of first piece
+						   $offset = strlen( $pieces_array[0] );
+
+					  $trimcase = 2;
+					  $stock_id = substr( $stock_id, $offset , $barcode_max_length );
+				 }
+				 else    //exact middle		    24char => 12 - 8 => -5678-9012-3456-7
+				 {
+					  //Risk is prod-6789012345-21 and prod-6789012345-22 will end up with same barcode
+					  //At least it gets us into the right products...
+					  $offset = floor($sku_length/2) - floor($barcode_max_length/2);
+					  $stock_id = substr( $stock_id, $offset , $barcode_max_length );
+					  $trimcase = 3;
+				 }
+			}
+			return $stock_id;
+	 	}
+
 		/*@fp@*/function append_file( $filename )
 		{
 			return fopen( $filename, 'a' );
@@ -549,80 +670,10 @@ if( ! class_exists( 'generic_fa_interface' ) )
 			array_walk(debug_backtrace(),create_function('$a,$b','print "{$a[\'function\']}()(".basename($a[\'file\']).":{$a[\'line\']});<br /> ";'));
 		}
 		/******************************************************************************//**
-		* Adjust stock_id lengths
-		*
-		* @param int barcode_max_length the longest length we want to allow
-		* @param int $sku_length the length calculated in the calling routine
-		* @param string sku the barcode/sku/stock_id to be adjusted
-		* @returns string stock_id
-		**************************************************************************************/
-		function adjust_stock_id_lengths( $barcode_max_length, $sku_length, $stock_id )
-		{
-			$highest_offset = $sku_length - $barcode_max_length;
-			$pieces_array = explode( "-", $stock_id );
-			//broach-d-ths-stn-pnk
-			//kilt-rs-48
-			//buckle-celtic-msg
-			//hd-ghillies-19.5-dw
-			//U-HT-B-M
-			//beermug-dancer-irish
-			//1234-5678-9012-3456   	19char
-			//1234-5678-9012-3456-7890   	24char
-			$pieces_count = count( $pieces_array );
-			//zero based array
-			for( $i = $pieces_count - 1; $i > 0; $i-- )	//don't need 0, that is sku_length
-			{
-				$chunklength[$i] = strlen( $pieces_array[$i] );
-				if( isset( $backlength[$i + 1] ) )
-					$backlength[$i] = $backlength[$i + 1] + $chunklength[$i] + 1;	//If we cut the sku here...
-				else
-					$backlength[$i] = $chunklength[$i] + 1; //missing leading separator from chunk
-			}
-			if( !isset( $backlength[1]  ) )
-			       $backlength[1] = $barcode_max_length - 1;	
-			if( $backlength[1] < $barcode_max_length ) 
-			{
-				//19char would work
-				$stock_id = substr( $stock_id, -$barcode_max_length );	//last 17 chars
-				$trimcase = 1;
-			}
-			else
-			{
-				//need to find a good middle e.g. 24char
-				//						4-5678-9012-3456-7
-				if( ( $sku_length - strlen( $pieces_array[0] ) + 1 - $backlength[ $pieces_count - 1 ] + 1 ) < $barcode_max_length )
-				{
-					//u-balmoral-navy-75
-					$offset = floor( (strlen( $pieces_array[0] ) + $backlength[ $pieces_count - 1 ])/2) ;
-					if( $offset > strlen( $pieces_array[0] ) AND $pieces_count > 3 )	//want 1 char of first piece
-						$offset = strlen( $pieces_array[0] );
-
-					$trimcase = 2;
-					$stock_id = substr( $stock_id, $offset , $barcode_max_length );	
-				}
-				else	//exact middle			24char => 12 - 8 => -5678-9012-3456-7
-				{
-					//Risk is prod-6789012345-21 and prod-6789012345-22 will end up with same barcode
-					//At least it gets us into the right products...
-					$offset = floor($sku_length/2) - floor($barcode_max_length/2);
-					$stock_id = substr( $stock_id, $offset , $barcode_max_length );	
-					$trimcase = 3;
-				}
-			}
-			return $stock_id;
-		}
-		/******************************************************************************//**
 		* Generate a line in a CSV to be used to print labels
 		*
 		*
 		*	This function is being use to create a CSV for both labels and pricebook.
-		*	To make the sku readable, we need the font to be at least 24 points
-		*	 which limits the SKU length to around 17 characters.  The leading
-		*	 characters in a variable product (broach-...-...-...) is pretty
-		*	 much redundant as far as the product search is concerned. FIX is 
-		*	 to count the number of dashes, and ensure we wrap a few dashes since
-		*	 the odds of g-abc-def duplicating is low.  However abc-def might repeat
-		*	 in size-color attribute type pairings.  Safe to cut off 1 chunck...
 		*
 		* @param string stock_id
 		* @param string category
@@ -633,48 +684,14 @@ if( ! class_exists( 'generic_fa_interface' ) )
 		**************************************************************************************/
 		function write_sku_labels_line( $stock_id, $category, $description, $price )
 		{
-			$barcode_max_length = 17;
 	 		$line  = '"' . $stock_id . '",';
-			$line .= '"' . $description . '",';
-			/*********************
-			 * 20180828 strlen check and dash count...
-			 * *******************/
-			$trimcase = 0;
-			$sku_length = strlen( $stock_id );
-			if( $sku_length > $barcode_max_length )
-			{
-				$stock_id = $this->adjust_stock_id_lengths( $barcode_max_length, $sku_length, $stock_id );
-			}
-			/*********************
-			 * !20180828 strlen check and dash count...
-			 * *******************/
+                        $line .= '"' . $description . '",';
                         $line  .= '"*' . strtoupper( $stock_id ) . '*",';        //For 3of9 Barcode
                         $line .= '"' . $category . '",';
-                        $line .= '"' . $price . '"';
-                        //$line .= '"' . $trimcase . '",';  //On refactor we no longer have this value
+                        $line .= '"' . $price . '",';
                         $this->write_file->write_line( $line );
 			return null;
 		}
-		/******************************************************************************//**
-		* Generate a line in a CSV to be used to do a Stock Count
-		*
-		*	This function is being use to create a CSV for WooPOS Count
-		*
-		* @param string stock_id
-		* @param string description
-		* @param float price
-		*
-		* @returns null
-		************************************************************************************** /
-		function write_woo_pos_count_line( $stock_id, $description, $price )
-		{
-	 		$line  = '"' . $stock_id . '",';
-			$line .= '"' . $description . '",';
-                        $line .= '"' . $price . '"';
-                        $this->write_file->write_line( $line );
-			return null;
-		}
-		*****/
 		function show_generic_form($form_array)
 		{
 			start_form(true);
@@ -757,6 +774,9 @@ if( ! class_exists( 'generic_fa_interface' ) )
 	
 }//!file if
 
+//func func func func
+
+//display_notification( __FILE__ . "::" . __LINE__ );
 class generic_fa_interface_view extends generic_fa_interface
 {
 	var $controller;	//!< object where we will get config values from, etc
@@ -969,14 +989,294 @@ class generic_fa_interface_view extends generic_fa_interface
 			$this->header_arr['inactive'] = "";
 	}
 }
+//display_notification( __FILE__ . "::" . __LINE__ );
 
-require_once( 'class.generic_fa_interface_model.php');
+/*
+         * Inherits:
+        *    ORIGIN
+        *       function __construct( $loglevel = PEAR_LOG_DEBUG )
+        *       function set_var( $var, $value )
+        *       function get_var( $var )
+        *       function var2data()
+        *       function fields2data( $fieldlist )
+        *       function LogError( $message, $level = PEAR_LOG_ERR )
+        *       function LogMsg( $message, $level = PEAR_LOG_INFO )
+         *    DB_BASE
+        *       function __construct( $host, $user, $pass, $database, $prefs_tablename )
+        *       function connect_db()
+        *       function is_installed()
+        *       function set_prefix()
+        *       function create_prefs_tablename()
+        *       function mysql_query( $sql = null, $errmsg = NULL )
+        *       function set_pref( $pref, $value )
+        *       function get_pref( $pref )
+        *       function loadprefs()
+        *       function updateprefs()
+        *       function create_table( $table_array, $field_array )
+        *    GENERIC_FA_INTERFACE
+        *       function __construct( $host, $user, $pass, $database, $pref_tablename )
+        *       function eventloop( $event, $method )
+        *       function eventregister( $event, $method )
+        *       function add_submodules()
+        *       function module_install()
+        *       function install()
+        *       function loadprefs()
+        *       function updateprefs()
+        *       function checkprefs()
+        *       function call_table( $action, $msg )
+        *       function action_show_form()
+        *       function show_config_form()
+        *       function form_export()
+        *       function related_tabs()
+        *       function show_form()
+        *       function base_page()
+        *       function display()
+        *       function run()
+        *       function modify_table_column( $tables_array )
+        *       function adjust_stock_id_lengths( $barcode_max_length, $sku_length, $stock_id )
+        *       function append_file( $filename )
+        *       function overwrite_file( $filename )
+        *       function open_write_file( $filename )
+        *       function write_line( $fp, $line )
+        *       function close_file( $fp )
+        *       function file_finish( $fp )
+        *       function backtrace()
+        *       function write_sku_labels_line( $stock_id, $category, $description, $price )
+        *       function show_generic_form($form_array)
+         * Provides:
+*/
+class generic_fa_interface_model extends generic_fa_interface
+{
+	var $table_interface;
+	var $controller;
+	protected $table_details;	//!<array
+	var $fields_array;
+	/**//*************************************************************************
+	* Construct the class
+	*
+	* @param string
+	* @param string
+	* @param string
+	* @param string
+	* @param string
+	* @returns none
+	*******************************************************************************/
 
+	function __construct( $host = null, $user = null, $pass = null, $database = null, $pref_tablename = null )
+	{
+		//display_notification( __FILE__ . "::" . __LINE__ );
+		parent:: __construct( $host, $user, $pass, $database, $pref_tablename );
+		//display_notification( __FILE__ . "::" . __LINE__ );
+		$this->table_details = array();
+		$this->fields_array = array();
+		//display_notification( __FILE__ . "::" . __LINE__ );
+
+		/******************************************************************************************************/
+		//20240918 Our code isn't ready to use a defined table_interface by default.
+		// ->set checks for enforce, and without fields_array successfully passed, everything has an exception
+		//	Missing the require_once??
+		//require_once( dirname( __FILE__ ) . '/class.table_interface.php' );
+		//$this->table_interface = new table_interface();
+		/******************************************************************************************************/
+
+		//display_notification( __FILE__ . "::" . __LINE__ );
+	}
+	/**//*********************************************************************************
+	* Copy the fields_array to table_interface so that ->set(enforcing) actually sets
+	*
+	* @param  array fields_array for table_interface
+	* @returns bool success or failure
+	***************************************************************************************/ 
+	function fieldsarray2tableinterface( $farray )
+	{
+		return $this->set( "fields_array",  $farray, false );
+		//return $this->table_interface->set( "fields_array",  $farray, false );
+		return false;
+	}
+	/*****************************************************************//**
+	* Return the field if possible
+	*
+	*	Tries to return the field natively.  If not set,
+	*	then goes to table_interface if it is defined and
+	*	tries to return it from there.
+	* @param string field to return
+	* @return mixed value OR throws exceptions
+	*
+	**********************************************************************/
+	function get( $field )
+	{
+			//display_notification( __FILE__ . "::" . __CLASS__ . "::"  . __METHOD__ . ":" . __LINE__, "WARN" );
+		try
+		{
+			//display_notification( __FILE__ . "::" . __CLASS__ . "::"  . __METHOD__ . ":" . __LINE__, "WARN" );
+			return parent::get( $field );
+		}
+		catch( Exception $e )
+		{
+			if( $e->getCode() == KSF_FIELD_NOT_SET )
+			{
+			//	display_notification( __FILE__ . "::" . __CLASS__ . "::"  . __METHOD__ . ":" . __LINE__, "WARN" );
+				if( isset( $this->table_interface ) )
+				{
+			//		display_notification( __FILE__ . "::" . __CLASS__ . "::"  . __METHOD__ . ":" . __LINE__, "WARN" );
+					try
+					{
+						$this->set( $field, $this->table_interface->get( $field ));
+					}
+					catch( Exception $e )
+					{
+						//display_error( $e->getMessage() );	
+						throw $e;
+					}
+					return parent::get( $field );
+				}
+			}
+			else
+			{
+				return $this->$field;
+			}
+		}
+		return null;
+	}
+	/*****************************************************************//**
+	* Set the field if possible
+	*
+	*	Tries to set the field in this class as well as in table_interface
+	*	assumption being we are going to do something with the field in
+	*	the database (else why set the model...)
+	*
+	* @param string field to set
+	* @param mixed value to set
+	* @param bool should we allow the class to only set __construct time fields
+	* @return nothing. throws exceptions
+	*
+	**********************************************************************/
+	function set( $field, $value = null, $enforce = false )
+	{
+		//	display_notification( __FILE__ . "::" . __CLASS__ . "::"  . __METHOD__ . ":" . __LINE__, "WARN" );
+		if( isset( $this->table_interface ) )
+		{
+			try
+			{
+				parent::set( $field, $value, false );
+				try {
+					$this->table_interface->set( $field, $value, $enforce );
+				} catch( Exception $e )
+				{
+					$code = $e->getCode();
+					switch( $code )
+					{
+						case KSF_FIELD_NOT_CLASS_VAR:
+							display_notification( __FILE__ . "::" . __CLASS__ . "::"  . __METHOD__ . ":" . __LINE__ . ": " . $e->getMessage() );
+							//return;
+							break;
+						default:
+							display_notification( __FILE__ . "::" . __CLASS__ . "::"  . __METHOD__ . ":" . __LINE__ . ": " . $e->getMessage() );
+							return;
+							break;
+					}
+				}
+			}
+			catch( Exception $e )
+			{
+				if( $this->debug )
+				{
+					display_error( $e->getMessage() );	
+					throw $e;
+				}
+				else
+					//display_notification( $e->getMessage() );
+					throw $e;
+			}
+		}
+		else
+		try 
+		{
+			parent::set( $field, $value, $enforce );
+		}
+		catch( Exception $e )
+		{
+			//display_notification( $e->getMessage() );
+			throw $e;
+		}
+		//	display_notification( __FILE__ . "::" . __CLASS__ . "::"  . __METHOD__ . ":" . __LINE__  );
+	}
+	/*****************************************************************//**
+	* Select a row out of the table
+	*
+	*	Requires that the table definition has a primary key designated
+	*	Requires that the pri key field has been set.
+	*
+	*	table_interface will have the resulting row's values set.
+	* @return nothing. throws exceptions
+	*
+	**********************************************************************/
+	function select_row()
+	{
+		$this->table_interface->select_row();
+	}
+	/*@mysql_result@*/function getAll()
+	{
+		$fields = "*";	//comma separated list
+		$where = array();
+		$orderby = array();
+		$limit = null;	//int
+		return $this->table_interface->select_table( $fields, $where, $orderby, $limit );
+	}
+	function install()
+	{
+		//display_notification( __FILE__ . "::" . __CLASS__ . "::"  . __METHOD__ . ":" . __LINE__, "WARN" );
+		$this->table_interface->create_table();
+		parent::install();
+	}
+	function insert_data( $data_arr )
+	{
+		//display_notification( __FILE__ . "::" . __CLASS__ . "::"  . __METHOD__ . ":" . __LINE__, "WARN" );
+		foreach( $data_arr as $key => $value )
+		{
+			try {
+				$ret = $this->table_interface->set( $key, $value );
+			} catch( Exception $e )
+			{
+				// because I am sending in $_POST there will be fields that can't be set.
+			}
+		}
+		try {
+			$this->table_interface->insert_table();
+			$this->table_interface->update_table();
+		} catch( Exception $e )
+		{
+		}
+	}
+	/*@bool@*/function validate( $data_var, $data_type )
+	{
+		if( strncasecmp( $data_type, "int", 3 ) )
+			$data_type = 'int';
+		if( strncasecmp( $data_type, "varc", 4 ) )
+			$data_type = 'string';
+		switch($data_type)
+		{
+			case 'bool':
+			case 'string':
+			case 'int':
+				//break;
+			default:
+				return true;	//data type not found
+		}
+	}
+	function getPrimaryKey()
+	{
+		return $this->table_interface->getPrimaryKey();
+	}
+}
+//display_notification( __FILE__ . "::" . __LINE__ );
 class generic_fa_interface_controller extends generic_fa_interface
 {
 	var $model;	//!< Object To be set in inheriting class
 	var $view;	//!< Object To be set in inheriting class
 	var $config;	//!< Object To be set in inheriting class
 }
+//display_notification( __FILE__ . "::" . __LINE__ );
 
+//echo __FILE__ . "::" . __LINE__ . "\n\r";
 ?>

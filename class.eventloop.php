@@ -111,7 +111,7 @@ class eventloop extends origin
 	}
 	function ObserverRegister( /*Class Instance*/$observer, $event )
         {
-               	$this->observers[$event][] = $observer;	//Indirect modification has no effect ERROR
+               	$this->observers[$event][] = $observer;
                	return SUCCESS;
         	}
          function ObserverDeRegister( $observer )

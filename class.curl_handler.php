@@ -36,9 +36,18 @@ class curl_handler
 	        $this->params = $parameters;
 	        $this->headers    = $headers;
 		$this->data       = $data;
-		$this->curl_handle = curl_init( $this->URL );
+		/***
+		 * Changing to how example.login.php init's the connection and URL
+		 */
+		//$this->curl_handle = curl_init( $this->URL );
+		$this->curl_handle = curl_init();
+		$this->curl_setopt( CURLOPT_URL, $URL );
+		/*** !example.loging.php */
 		//save response headers
+		/***
+		*20220705 Can't call this function
 		$this->curl_setopt( CURLOPT_HEADERFUNCTION, array( $this, 'curl_stream_headers' ) );
+		*/
 	}
 	function __destruct()
 	{
@@ -50,8 +59,17 @@ class curl_handler
 		}
 		 
 	}
+	function set( $field, $val )
+	{
+		$this->$field = $val;
+	}
+	function get( $field )
+	{
+		return $this->$field;
+	}
 	function curl_setopt( $key, $value )
 	{
+		$this->$key = $value;
 		return curl_setopt( $this->curl_handle, $key, $value );
 	}
 	/**
@@ -117,9 +135,10 @@ class curl_handler
 				break;
 		}
 		$this->curlopts2curl( $this->curlopts );
-		$this->curl_setopt(CURLOPT_HEADER, FALSE);	//from write2woo
+		$this->curl_setopt(CURLOPT_HEADER, false);	//from write2woo
 
 		$start_time = microtime( true );
+//var_dump( $this->curl_handle );
 		if( ! $ret = curl_exec($this->curl_handle) )
 	      	{
 			$this->response_body =  "Error returned by CURL: " . curl_error($this->curl_handle);
@@ -142,16 +161,23 @@ class curl_handler
 			$this->http_code = curl_getinfo( $this->curl_handle, CURLINFO_HTTP_CODE );
 			$this->curlinfoarray = curl_getinfo( $this->curl_handle);
 		}
-		return;
+		//20220705 was solely return.  Return  true
+		return true;
 	}
 	/***************************************************//**
 	 *Take an array of Curl Options and pass to Curl
+	 *
+	 * Should we return a status of some sort?  T/F or throw exceptions?
 	 *
 	 * @param array array of options
 	 * @return null
 	 * ****************************************************/
 	function curlopts2curl( $curlopts )
 	{
+		if( ! is_array( $curlopts ) )
+		{
+			return null;
+		}
 		foreach( $curlopts as $key=>$value )
 		{
 			$res = $this->curl_setopt( $key, $value );
@@ -207,6 +233,5 @@ class curl_handler
 	//	set Body
 	//	call do_request
 	//		call make_api_call( method, path, data (body/param) )
-}
 
 ?>
