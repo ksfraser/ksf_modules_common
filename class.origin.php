@@ -238,7 +238,7 @@ class origin
 		$rtn = array ();
 		$src = array ();
 		//private prefixed by class name, protected by *
-    		while ( list ($key, $value) = each ($clone) ) {
+    		foreach ($clone as $key => $value) {
 				//	display_notification( __FILE__ . "::" . __LINE__ . print_r( $key, true ) );
 				//	display_notification( __FILE__ . "::" . __LINE__ . print_r( $value, true ) );
 			$aux = explode ("\0", $key);
