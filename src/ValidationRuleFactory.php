@@ -14,6 +14,9 @@ namespace Ksfraser\ModulesCommon;
  */
 class ValidationRuleFactory
 {
+    /** Test hook: when true, taxRate() validation always fails. */
+    public static bool $forceFail = false;
+
     /**
      * Create a range validation rule.
      *
@@ -225,8 +228,16 @@ class ValidationRuleFactory
      */
     public static function taxRate(): BusinessRuleValidationRule
     {
+        $message = self::$forceFail
+            ? 'forced-rate-invalid'
+            : 'Tax rate must be a decimal value between 0.00 and 1.00';
+
         return new BusinessRuleValidationRule(
             function (mixed $rate): bool {
+                if (self::$forceFail) {
+                    return false;
+                }
+
                 if (!is_numeric($rate)) {
                     return false;
                 }
@@ -234,8 +245,8 @@ class ValidationRuleFactory
                 $numericRate = (float) $rate;
                 return $numericRate >= 0 && $numericRate <= 1; // 0% to 100% as decimal
             },
-            'Tax rate must be between 0.00 and 1.00 (0% to 100%)',
-            'Tax rate must be a decimal value between 0.00 and 1.00'
+            'Tax rate validation',
+            $message
         );
     }
 
