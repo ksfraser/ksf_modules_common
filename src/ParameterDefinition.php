@@ -12,15 +12,37 @@ namespace Ksfraser\ModulesCommon;
  */
 class ParameterDefinition
 {
+    public $name;
+
+    public $type;
+
+    public $description;
+
+    public $required;
+
+    public $defaultValue;
+
+    public $validationRule;
+
+    public $allowedValues;
+
     public function __construct(
-        public readonly string $name,
-        public readonly string $type,
-        public readonly string $description,
-        public readonly bool $required = true,
-        public readonly mixed $defaultValue = null,
-        public readonly ?ValidationRuleInterface $validationRule = null,
-        public readonly ?array $allowedValues = null
-    ) {}
+        string $name,
+        string $type,
+        string $description,
+        bool $required = true,
+        $defaultValue = null,
+        ?ValidationRuleInterface $validationRule = null,
+        ?array $allowedValues = null
+    ) {
+        $this->name = $name;
+        $this->type = $type;
+        $this->description = $description;
+        $this->required = $required;
+        $this->defaultValue = $defaultValue;
+        $this->validationRule = $validationRule;
+        $this->allowedValues = $allowedValues;
+    }
 
     /**
      * Validate a value against this parameter definition.
@@ -28,7 +50,7 @@ class ParameterDefinition
      * @param mixed $value The value to validate
      * @return bool True if valid
      */
-    public function validate(mixed $value): bool
+    public function validate($value): bool
     {
         // Type validation
         if (!$this->validateType($value)) {
@@ -54,16 +76,26 @@ class ParameterDefinition
      * @param mixed $value The value to validate
      * @return bool True if type is valid
      */
-    private function validateType(mixed $value): bool
+    private function validateType($value): bool
     {
-        return match ($this->type) {
-            'int', 'integer' => is_int($value),
-            'float', 'double' => is_float($value) || is_int($value),
-            'string' => is_string($value),
-            'bool', 'boolean' => is_bool($value),
-            'array' => is_array($value),
-            'number' => is_numeric($value),
-            default => true // Allow any type for custom types
-        };
+        switch ($this->type) {
+            case 'int':
+            case 'integer':
+                return is_int($value);
+            case 'float':
+            case 'double':
+                return is_float($value) || is_int($value);
+            case 'string':
+                return is_string($value);
+            case 'bool':
+            case 'boolean':
+                return is_bool($value);
+            case 'array':
+                return is_array($value);
+            case 'number':
+                return is_numeric($value);
+            default:
+                return true; // Allow any type for custom types
+        }
     }
 }

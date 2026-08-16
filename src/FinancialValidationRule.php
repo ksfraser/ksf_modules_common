@@ -19,7 +19,7 @@ abstract class FinancialValidationRule implements ValidationRuleInterface
      * @param int $decimals Maximum number of decimal places allowed
      * @return bool True if the value is a valid monetary amount
      */
-    protected function validateMonetaryAmount(mixed $value, int $decimals = 2): bool
+    protected function validateMonetaryAmount($value, int $decimals = 2): bool
     {
         if (!is_numeric($value)) {
             return false;
@@ -41,7 +41,7 @@ abstract class FinancialValidationRule implements ValidationRuleInterface
      * @param mixed $value The value to validate
      * @return bool True if the value is a valid percentage
      */
-    protected function validatePercentage(mixed $value): bool
+    protected function validatePercentage($value): bool
     {
         if (!is_numeric($value)) {
             return false;
@@ -57,7 +57,7 @@ abstract class FinancialValidationRule implements ValidationRuleInterface
      * @param mixed $value The value to validate
      * @return bool True if the value is positive
      */
-    protected function validatePositive(mixed $value): bool
+    protected function validatePositive($value): bool
     {
         if (!is_numeric($value)) {
             return false;
@@ -72,7 +72,7 @@ abstract class FinancialValidationRule implements ValidationRuleInterface
      * @param mixed $value The value to validate
      * @return bool True if the value is non-negative
      */
-    protected function validateNonNegative(mixed $value): bool
+    protected function validateNonNegative($value): bool
     {
         if (!is_numeric($value)) {
             return false;
@@ -87,7 +87,7 @@ abstract class FinancialValidationRule implements ValidationRuleInterface
      * @param mixed $value The value to format
      * @return string The formatted monetary value
      */
-    protected function formatMonetary(mixed $value): string
+    protected function formatMonetary($value): string
     {
         if (!is_numeric($value)) {
             return (string) $value;
@@ -102,7 +102,7 @@ abstract class FinancialValidationRule implements ValidationRuleInterface
      * @param mixed $value The value to format
      * @return string The formatted percentage value
      */
-    protected function formatPercentage(mixed $value): string
+    protected function formatPercentage($value): string
     {
         if (!is_numeric($value)) {
             return (string) $value;

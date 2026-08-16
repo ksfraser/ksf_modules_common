@@ -12,14 +12,19 @@ namespace Ksfraser\ModulesCommon;
  */
 class RangeValidationRule implements ValidationRuleInterface
 {
+    private $min;
+
+    private $max;
+
     /**
      * @param float|null $min The minimum allowed value (inclusive)
      * @param float|null $max The maximum allowed value (inclusive)
      */
-    public function __construct(
-        private readonly ?float $min = null,
-        private readonly ?float $max = null
-    ) {
+    public function __construct(?float $min = null, ?float $max = null)
+    {
+        $this->min = $min;
+        $this->max = $max;
+
         if ($this->min === null && $this->max === null) {
             throw new \InvalidArgumentException('At least one of min or max must be specified');
         }
@@ -35,7 +40,7 @@ class RangeValidationRule implements ValidationRuleInterface
      * @param mixed $value The value to validate
      * @return bool True if the value is within range
      */
-    public function validate(mixed $value): bool
+    public function validate($value): bool
     {
         if (!is_numeric($value)) {
             return false;

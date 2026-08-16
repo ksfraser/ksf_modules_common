@@ -11,16 +11,26 @@ namespace Ksfraser\ModulesCommon;
  */
 class ValidationResult
 {
+    public $isValid;
+
+    public $errors;
+
+    public $warnings;
+
     /**
      * @param bool $isValid Whether the validation passed
      * @param array<string> $errors List of error messages
      * @param array<string> $warnings List of warning messages
      */
     public function __construct(
-        public readonly bool $isValid,
-        public readonly array $errors = [],
-        public readonly array $warnings = []
-    ) {}
+        bool $isValid,
+        array $errors = [],
+        array $warnings = []
+    ) {
+        $this->isValid = $isValid;
+        $this->errors = $errors;
+        $this->warnings = $warnings;
+    }
 
     /**
      * Create a successful validation result.
@@ -52,7 +62,7 @@ class ValidationResult
      */
     public function withError(string $error): self
     {
-        return new self(false, [...$this->errors, $error], $this->warnings);
+        return new self(false, array_merge($this->errors, [$error]), $this->warnings);
     }
 
     /**
@@ -63,7 +73,7 @@ class ValidationResult
      */
     public function withWarning(string $warning): self
     {
-        return new self($this->isValid, $this->errors, [...$this->warnings, $warning]);
+        return new self($this->isValid, $this->errors, array_merge($this->warnings, [$warning]));
     }
 
     /**
@@ -93,6 +103,6 @@ class ValidationResult
      */
     public function getAllMessages(): array
     {
-        return [...$this->errors, ...$this->warnings];
+        return array_merge($this->errors, $this->warnings);
     }
 }

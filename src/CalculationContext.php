@@ -14,6 +14,20 @@ use DateTimeImmutable;
  */
 class CalculationContext
 {
+    public $calculationType;
+
+    public $parameters;
+
+    public $assumptions;
+
+    public $clientId;
+
+    public $advisorId;
+
+    public $effectiveDate;
+
+    public $metadata;
+
     /**
      * @param string $calculationType The type of calculation being performed
      * @param array<string, mixed> $parameters The calculation parameters
@@ -24,14 +38,22 @@ class CalculationContext
      * @param array<string, mixed> $metadata Additional metadata
      */
     public function __construct(
-        public readonly string $calculationType,
-        public readonly array $parameters,
-        public readonly array $assumptions = [],
-        public readonly ?string $clientId = null,
-        public readonly ?string $advisorId = null,
-        public readonly ?DateTimeImmutable $effectiveDate = null,
-        public readonly array $metadata = []
-    ) {}
+        string $calculationType,
+        array $parameters,
+        array $assumptions = [],
+        ?string $clientId = null,
+        ?string $advisorId = null,
+        ?DateTimeImmutable $effectiveDate = null,
+        array $metadata = []
+    ) {
+        $this->calculationType = $calculationType;
+        $this->parameters = $parameters;
+        $this->assumptions = $assumptions;
+        $this->clientId = $clientId;
+        $this->advisorId = $advisorId;
+        $this->effectiveDate = $effectiveDate;
+        $this->metadata = $metadata;
+    }
 
     /**
      * Get a parameter value by name.
@@ -40,7 +62,7 @@ class CalculationContext
      * @param mixed $default The default value if parameter not found
      * @return mixed The parameter value or default
      */
-    public function getParameter(string $name, mixed $default = null): mixed
+    public function getParameter(string $name, $default = null)
     {
         return $this->parameters[$name] ?? $default;
     }
@@ -63,7 +85,7 @@ class CalculationContext
      * @param mixed $default The default value if assumption not found
      * @return mixed The assumption value or default
      */
-    public function getAssumption(string $name, mixed $default = null): mixed
+    public function getAssumption(string $name, $default = null)
     {
         return $this->assumptions[$name] ?? $default;
     }
@@ -75,7 +97,7 @@ class CalculationContext
      * @param mixed $default The default value if metadata not found
      * @return mixed The metadata value or default
      */
-    public function getMetadata(string $name, mixed $default = null): mixed
+    public function getMetadata(string $name, $default = null)
     {
         return $this->metadata[$name] ?? $default;
     }

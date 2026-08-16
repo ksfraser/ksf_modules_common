@@ -13,6 +13,14 @@ namespace Ksfraser\ModulesCommon;
  */
 class DependencyValidationRule implements ValidationRuleInterface
 {
+    private $dependentParam;
+
+    private $requiredValue;
+
+    private $rule;
+
+    private $description;
+
     /**
      * @param string $dependentParam The parameter this rule depends on
      * @param mixed $requiredValue The value the dependent parameter must have
@@ -20,11 +28,16 @@ class DependencyValidationRule implements ValidationRuleInterface
      * @param string $description Custom description for this dependency rule
      */
     public function __construct(
-        private readonly string $dependentParam,
-        private readonly mixed $requiredValue,
-        private readonly ValidationRuleInterface $rule,
-        private readonly string $description = ''
-    ) {}
+        string $dependentParam,
+        $requiredValue,
+        ValidationRuleInterface $rule,
+        string $description = ''
+    ) {
+        $this->dependentParam = $dependentParam;
+        $this->requiredValue = $requiredValue;
+        $this->rule = $rule;
+        $this->description = $description;
+    }
 
     /**
      * Validate based on parameter dependencies.
@@ -36,7 +49,7 @@ class DependencyValidationRule implements ValidationRuleInterface
      * @param mixed $value The value to validate (not used in dependency validation)
      * @return bool Always returns true (validation is handled in custom validation)
      */
-    public function validate(mixed $value): bool
+    public function validate($value): bool
     {
         // This rule is designed for cross-parameter validation
         // and should be used in performCustomValidation methods
@@ -110,7 +123,7 @@ class DependencyValidationRule implements ValidationRuleInterface
      *
      * @return mixed The required value
      */
-    public function getRequiredValue(): mixed
+    public function getRequiredValue()
     {
         return $this->requiredValue;
     }

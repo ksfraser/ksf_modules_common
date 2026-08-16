@@ -15,7 +15,7 @@ namespace Ksfraser\ModulesCommon;
 class ValidationRuleFactory
 {
     /** Test hook: when true, taxRate() validation always fails. */
-    public static bool $forceFail = false;
+    public static $forceFail = false;
 
     /**
      * Create a range validation rule.
@@ -37,7 +37,7 @@ class ValidationRuleFactory
     public static function positive(): BusinessRuleValidationRule
     {
         return new BusinessRuleValidationRule(
-            function (mixed $value): bool {
+            function ($value): bool {
                 return is_numeric($value) && (float) $value > 0;
             },
             'Value must be a positive number',
@@ -53,7 +53,7 @@ class ValidationRuleFactory
     public static function nonNegative(): BusinessRuleValidationRule
     {
         return new BusinessRuleValidationRule(
-            function (mixed $value): bool {
+            function ($value): bool {
                 return is_numeric($value) && (float) $value >= 0;
             },
             'Value must be a non-negative number',
@@ -69,7 +69,7 @@ class ValidationRuleFactory
     public static function percentage(): BusinessRuleValidationRule
     {
         return new BusinessRuleValidationRule(
-            function (mixed $value): bool {
+            function ($value): bool {
                 if (!is_numeric($value)) {
                     return false;
                 }
@@ -90,7 +90,7 @@ class ValidationRuleFactory
     public static function monetaryAmount(int $maxDecimals = 2): BusinessRuleValidationRule
     {
         return new BusinessRuleValidationRule(
-            function (mixed $value) use ($maxDecimals): bool {
+            function ($value) use ($maxDecimals): bool {
                 if (!is_numeric($value)) {
                     return false;
                 }
@@ -130,7 +130,7 @@ class ValidationRuleFactory
      */
     public static function dependency(
         string $dependentParam,
-        mixed $requiredValue,
+        $requiredValue,
         ValidationRuleInterface $rule,
         string $description = ''
     ): DependencyValidationRule {
@@ -162,7 +162,7 @@ class ValidationRuleFactory
     public static function minimumInvestmentByAccountType(array $minimums): BusinessRuleValidationRule
     {
         return new BusinessRuleValidationRule(
-            function (mixed $investmentAmount) use ($minimums): bool {
+            function ($investmentAmount) use ($minimums): bool {
                 if (!is_numeric($investmentAmount)) {
                     return false;
                 }
@@ -188,7 +188,7 @@ class ValidationRuleFactory
     public static function ageBasedRestriction(int $minAge, string $restrictionType): BusinessRuleValidationRule
     {
         return new BusinessRuleValidationRule(
-            function (mixed $age) use ($minAge): bool {
+            function ($age) use ($minAge): bool {
                 if (!is_numeric($age)) {
                     return false;
                 }
@@ -209,7 +209,7 @@ class ValidationRuleFactory
     public static function combinedIncome(float $minIncome): BusinessRuleValidationRule
     {
         return new BusinessRuleValidationRule(
-            function (mixed $income) use ($minIncome): bool {
+            function ($income) use ($minIncome): bool {
                 if (!is_numeric($income)) {
                     return false;
                 }
@@ -233,7 +233,7 @@ class ValidationRuleFactory
             : 'Tax rate must be a decimal value between 0.00 and 1.00';
 
         return new BusinessRuleValidationRule(
-            function (mixed $rate): bool {
+            function ($rate): bool {
                 if (self::$forceFail) {
                     return false;
                 }
@@ -258,7 +258,7 @@ class ValidationRuleFactory
     public static function canadianSIN(): BusinessRuleValidationRule
     {
         return new BusinessRuleValidationRule(
-            function (mixed $sin): bool {
+            function ($sin): bool {
                 if (!is_string($sin) && !is_numeric($sin)) {
                     return false;
                 }
@@ -301,7 +301,7 @@ class ValidationRuleFactory
     public static function canadianPostalCode(): BusinessRuleValidationRule
     {
         return new BusinessRuleValidationRule(
-            function (mixed $postalCode): bool {
+            function ($postalCode): bool {
                 if (!is_string($postalCode)) {
                     return false;
                 }

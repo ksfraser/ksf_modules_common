@@ -12,6 +12,10 @@ namespace Ksfraser\ModulesCommon;
  */
 class CalculationException extends \Exception
 {
+    public $calculationType;
+
+    public $context;
+
     /**
      * @param string $message The error message
      * @param string $calculationType The type of calculation that failed
@@ -20,11 +24,13 @@ class CalculationException extends \Exception
      */
     public function __construct(
         string $message,
-        public readonly string $calculationType,
-        public readonly array $context = [],
+        string $calculationType,
+        array $context = [],
         ?\Throwable $previous = null
     ) {
         parent::__construct($message, 0, $previous);
+        $this->calculationType = $calculationType;
+        $this->context = $context;
     }
 
     /**

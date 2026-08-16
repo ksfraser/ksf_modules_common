@@ -21,12 +21,15 @@ use Psr\Log\LoggerInterface;
  */
 abstract class GenericCalculationEngine implements CalculationEngineInterface
 {
+    protected $logger;
+
     /**
      * @param LoggerInterface|null $logger Optional logger for calculation events
      */
-    public function __construct(
-        protected readonly ?LoggerInterface $logger = null
-    ) {}
+    public function __construct(?LoggerInterface $logger = null)
+    {
+        $this->logger = $logger;
+    }
 
     /**
      * Perform the calculation using the provided context.
@@ -37,20 +40,24 @@ abstract class GenericCalculationEngine implements CalculationEngineInterface
      */
     final public function calculate(CalculationContext $context): CalculationResult
     {
-        $this->logger?->info('Starting calculation', [
-            'type' => $context->calculationType,
-            'client_id' => $context->clientId,
-            'advisor_id' => $context->advisorId
-        ]);
+        if ($this->logger !== null) {
+            $this->logger->info('Starting calculation', [
+                'type' => $context->calculationType,
+                'client_id' => $context->clientId,
+                'advisor_id' => $context->advisorId
+            ]);
+        }
 
         try {
             // Validate the context
             $validationResult = $this->validate($context);
             if (!$validationResult->isValid) {
-                $this->logger?->warning('Validation failed', [
-                    'type' => $context->calculationType,
-                    'errors' => $validationResult->errors
-                ]);
+                if ($this->logger !== null) {
+                    $this->logger->warning('Validation failed', [
+                        'type' => $context->calculationType,
+                        'errors' => $validationResult->errors
+                    ]);
+                }
 
                 return CalculationResult::failure(
                     $context->calculationType,
@@ -62,10 +69,12 @@ abstract class GenericCalculationEngine implements CalculationEngineInterface
             // Perform the actual calculation
             $result = $this->performCalculation($context);
 
-            $this->logger?->info('Calculation completed successfully', [
-                'type' => $context->calculationType,
-                'result_type' => gettype($result)
-            ]);
+            if ($this->logger !== null) {
+                $this->logger->info('Calculation completed successfully', [
+                    'type' => $context->calculationType,
+                    'result_type' => gettype($result)
+                ]);
+            }
 
             // Get assumptions used (merge defaults with overrides)
             $assumptionsUsed = $this->getAssumptionsUsed($context);
@@ -78,29 +87,33 @@ abstract class GenericCalculationEngine implements CalculationEngineInterface
                 [
                     'client_id' => $context->clientId,
                     'advisor_id' => $context->advisorId,
-                    'effective_date' => $context->effectiveDate?->format('c'),
-                    'calculation_engine' => static::class
+                    'effective_date' => $context->effectiveDate !== null ? $context->effectiveDate->format('c') : null,
+                    'calculation_engine' => get_called_class()
                 ]
             );
 
         } catch (CalculationException $e) {
-            $this->logger?->error('Calculation exception', [
-                'type' => $context->calculationType,
-                'message' => $e->getMessage(),
-                'context' => $e->context
-            ]);
+            if ($this->logger !== null) {
+                $this->logger->error('Calculation exception', [
+                    'type' => $context->calculationType,
+                    'message' => $e->getMessage(),
+                    'context' => $e->context
+                ]);
+            }
             throw $e;
         } catch (\Throwable $e) {
-            $this->logger?->error('Unexpected calculation error', [
-                'type' => $context->calculationType,
-                'message' => $e->getMessage(),
-                'exception' => $e::class
-            ]);
+            if ($this->logger !== null) {
+                $this->logger->error('Unexpected calculation error', [
+                    'type' => $context->calculationType,
+                    'message' => $e->getMessage(),
+                    'exception' => get_class($e)
+                ]);
+            }
 
             throw CalculationException::calculationError(
                 $context->calculationType,
                 'An unexpected error occurred during calculation: ' . $e->getMessage(),
-                ['original_exception' => $e::class]
+                ['original_exception' => get_class($e)]
             );
         }
     }
@@ -135,7 +148,7 @@ abstract class GenericCalculationEngine implements CalculationEngineInterface
                 $errors[] = sprintf(
                     'Parameter %s failed validation: %s',
                     $paramName,
-                    $paramDef->validationRule?->getErrorMessage() ?? 'Invalid value'
+                    $paramDef->validationRule !== null ? $paramDef->validationRule->getErrorMessage() : 'Invalid value'
                 );
             }
         }
@@ -152,7 +165,7 @@ abstract class GenericCalculationEngine implements CalculationEngineInterface
                 $warnings[] = sprintf(
                     'Optional parameter %s failed validation: %s',
                     $paramName,
-                    $paramDef->validationRule?->getErrorMessage() ?? 'Invalid value'
+                    $paramDef->validationRule !== null ? $paramDef->validationRule->getErrorMessage() : 'Invalid value'
                 );
             }
         }
@@ -196,7 +209,7 @@ abstract class GenericCalculationEngine implements CalculationEngineInterface
      * @return mixed The primary calculation result
      * @throws CalculationException If the calculation logic fails
      */
-    abstract protected function performCalculation(CalculationContext $context): mixed;
+    abstract protected function performCalculation(CalculationContext $context);
 
     /**
      * Perform custom validation beyond parameter validation.
@@ -259,7 +272,7 @@ abstract class GenericCalculationEngine implements CalculationEngineInterface
      * @param string $paramName The parameter name for error messages
      * @return ValidationResult Validation result
      */
-    protected function validatePositiveNumber(mixed $value, string $paramName): ValidationResult
+    protected function validatePositiveNumber($value, string $paramName): ValidationResult
     {
         if (!is_numeric($value) || $value <= 0) {
             return ValidationResult::failure([
@@ -276,7 +289,7 @@ abstract class GenericCalculationEngine implements CalculationEngineInterface
      * @param string $paramName The parameter name for error messages
      * @return ValidationResult Validation result
      */
-    protected function validatePercentage(mixed $value, string $paramName): ValidationResult
+    protected function validatePercentage($value, string $paramName): ValidationResult
     {
         if (!is_numeric($value) || $value < 0 || $value > 100) {
             return ValidationResult::failure([

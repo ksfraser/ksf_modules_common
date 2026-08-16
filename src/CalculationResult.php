@@ -14,6 +14,22 @@ use DateTimeImmutable;
  */
 class CalculationResult
 {
+    public $calculationType;
+
+    public $primaryResult;
+
+    public $validationResult;
+
+    public $intermediateResults;
+
+    public $assumptionsUsed;
+
+    public $metadata;
+
+    public $calculatedAt;
+
+    public $calculationId;
+
     /**
      * @param string $calculationType The type of calculation performed
      * @param mixed $primaryResult The main calculation result
@@ -25,15 +41,24 @@ class CalculationResult
      * @param string|null $calculationId Unique identifier for this calculation
      */
     public function __construct(
-        public readonly string $calculationType,
-        public readonly mixed $primaryResult,
-        public readonly ValidationResult $validationResult,
-        public readonly array $intermediateResults = [],
-        public readonly array $assumptionsUsed = [],
-        public readonly array $metadata = [],
-        public readonly DateTimeImmutable $calculatedAt = new DateTimeImmutable(),
-        public readonly ?string $calculationId = null
-    ) {}
+        string $calculationType,
+        $primaryResult,
+        ValidationResult $validationResult,
+        array $intermediateResults = [],
+        array $assumptionsUsed = [],
+        array $metadata = [],
+        DateTimeImmutable $calculatedAt = null,
+        ?string $calculationId = null
+    ) {
+        $this->calculationType = $calculationType;
+        $this->primaryResult = $primaryResult;
+        $this->validationResult = $validationResult;
+        $this->intermediateResults = $intermediateResults;
+        $this->assumptionsUsed = $assumptionsUsed;
+        $this->metadata = $metadata;
+        $this->calculatedAt = $calculatedAt !== null ? $calculatedAt : new DateTimeImmutable();
+        $this->calculationId = $calculationId;
+    }
 
     /**
      * Create a successful calculation result.
@@ -47,7 +72,7 @@ class CalculationResult
      */
     public static function success(
         string $calculationType,
-        mixed $primaryResult,
+        $primaryResult,
         array $intermediateResults = [],
         array $assumptionsUsed = [],
         array $metadata = []
@@ -104,7 +129,7 @@ class CalculationResult
      * @param mixed $default The default value if not found
      * @return mixed The intermediate result or default
      */
-    public function getIntermediateResult(string $name, mixed $default = null): mixed
+    public function getIntermediateResult(string $name, $default = null)
     {
         return $this->intermediateResults[$name] ?? $default;
     }
@@ -116,7 +141,7 @@ class CalculationResult
      * @param mixed $default The default value if not found
      * @return mixed The assumption value or default
      */
-    public function getAssumptionUsed(string $name, mixed $default = null): mixed
+    public function getAssumptionUsed(string $name, $default = null)
     {
         return $this->assumptionsUsed[$name] ?? $default;
     }
@@ -128,7 +153,7 @@ class CalculationResult
      * @param mixed $default The default value if not found
      * @return mixed The metadata value or default
      */
-    public function getMetadata(string $name, mixed $default = null): mixed
+    public function getMetadata(string $name, $default = null)
     {
         return $this->metadata[$name] ?? $default;
     }
@@ -138,7 +163,7 @@ class CalculationResult
      *
      * @return mixed The primary calculation results
      */
-    public function getResults(): mixed
+    public function getResults()
     {
         return $this->primaryResult;
     }

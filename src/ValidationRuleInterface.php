@@ -18,7 +18,7 @@ interface ValidationRuleInterface
      * @param mixed $value The value to validate
      * @return bool True if the value passes validation
      */
-    public function validate(mixed $value): bool;
+    public function validate($value): bool;
 
     /**
      * Get a human-readable description of what this rule validates.
