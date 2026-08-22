@@ -945,7 +945,14 @@ class generic_fa_interface_view extends generic_fa_interface
 						file_row($row['label'], $row['pref_name'], $source->$row['pref_name']);
 						break;
 					case "location":
+					case "locations_list":
 						locations_list_row( $row['label'], $row['pref_name'], $source->$row['pref_name'], false, false);
+						break;
+					case "customer_list":
+						customer_list_row( $row['label'], $row['pref_name'], $source->$row['pref_name'], false, false);
+						break;
+					case "dimensions_list":
+						dimensions_list_row( $row['label'], $row['pref_name'], $source->$row['pref_name'], false);
 						break;
 					default:
 						text_row($row['label'], $row['pref_name'], $source->$row['pref_name'], 20, 60);
