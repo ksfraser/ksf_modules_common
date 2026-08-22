@@ -189,4 +189,167 @@ class ModuleConfigTest extends TestCase
         $this->assertSame('locations_list', $fields['location_field']['type']);
         $this->assertSame('dimensions_list', $fields['dim_field']['type']);
     }
+
+    /** @BABOK Related: UT-ISU-004-001-016 */
+    public function testFieldOptionsStored(): void
+    {
+        $config = new ModuleConfig('t', 'm', [
+            ['name' => 'x', 'label' => 'X', 'type' => 'text', 'options' => ['size' => 20, 'max' => 50]],
+        ]);
+        $fields = $config->getFields();
+        $this->assertSame(['size' => 20, 'max' => 50], $fields['x']['options']);
+    }
+
+    /** @BABOK Related: UT-ISU-004-001-017 */
+    public function testFieldOptionsDefaultsToEmpty(): void
+    {
+        $config = new ModuleConfig('t', 'm', [
+            ['name' => 'x', 'label' => 'X'],
+        ]);
+        $fields = $config->getFields();
+        $this->assertSame([], $fields['x']['options']);
+    }
+
+    // ------------------------------------------------------------------
+    // Renderer registry
+    // ------------------------------------------------------------------
+
+    /** @BABOK Related: UT-ISU-004-001-020 */
+    public function testBuiltInRenderersRegistered(): void
+    {
+        $config = new ModuleConfig('t', 'm');
+        $this->assertNotNull($config->getRenderer('text'));
+        $this->assertNotNull($config->getRenderer('integer'));
+        $this->assertNotNull($config->getRenderer('boolean'));
+        $this->assertIsCallable($config->getRenderer('text'));
+    }
+
+    /** @BABOK Related: UT-ISU-004-001-021 */
+    public function testAddRenderer(): void
+    {
+        $config = new ModuleConfig('t', 'm');
+        $fn = function () {};
+        $result = $config->addRenderer('custom_type', $fn);
+
+        $this->assertSame($config, $result);
+        $this->assertSame($fn, $config->getRenderer('custom_type'));
+    }
+
+    /** @BABOK Related: UT-ISU-004-001-022 */
+    public function testAddRendererCaseInsensitive(): void
+    {
+        $config = new ModuleConfig('t', 'm');
+        $fn = function () {};
+        $config->addRenderer('MyType', $fn);
+
+        $this->assertSame($fn, $config->getRenderer('mytype'));
+        $this->assertSame($fn, $config->getRenderer('MYTYPE'));
+    }
+
+    /** @BABOK Related: UT-ISU-004-001-023 */
+    public function testAddRenderersBulk(): void
+    {
+        $config = new ModuleConfig('t', 'm');
+        $fn1 = function () {};
+        $fn2 = function () {};
+        $config->addRenderers(['a' => $fn1, 'b' => $fn2]);
+
+        $this->assertSame($fn1, $config->getRenderer('a'));
+        $this->assertSame($fn2, $config->getRenderer('b'));
+    }
+
+    /** @BABOK Related: UT-ISU-004-001-024 */
+    public function testConstructorWithRenderers(): void
+    {
+        $fn = function () {};
+        $config = new ModuleConfig('t', 'm', [], ['my_type' => $fn]);
+
+        $this->assertSame($fn, $config->getRenderer('my_type'));
+    }
+
+    /** @BABOK Related: UT-ISU-004-001-025 */
+    public function testGetRendererUnknownReturnsNull(): void
+    {
+        $config = new ModuleConfig('t', 'm');
+        $this->assertNull($config->getRenderer('nonexistent'));
+    }
+
+    /** @BABOK Related: UT-ISU-004-001-026 */
+    public function testGetRendererTypes(): void
+    {
+        $config = new ModuleConfig('t', 'm');
+        $types = $config->getRendererTypes();
+        $this->assertContains('text', $types);
+        $this->assertContains('integer', $types);
+        $this->assertContains('boolean', $types);
+    }
+
+    /** @BABOK Related: UT-ISU-004-001-027 */
+    public function testAddDDLRendererRegistersCallable(): void
+    {
+        $config = new ModuleConfig('t', 'm');
+        $result = $config->addDDLRenderer('customer_list', 'customer_list_row');
+
+        $this->assertSame($result, $config);
+        $this->assertNotNull($config->getRenderer('customer_list'));
+        $this->assertIsCallable($config->getRenderer('customer_list'));
+    }
+
+    /** @BABOK Related: UT-ISU-004-001-028 */
+    public function testAddRadioRendererRegistersCallable(): void
+    {
+        $config = new ModuleConfig('t', 'm');
+        $result = $config->addRadioRenderer();
+
+        $this->assertSame($result, $config);
+        $this->assertNotNull($config->getRenderer('radio'));
+        $this->assertIsCallable($config->getRenderer('radio'));
+    }
+
+    /** @BABOK Related: UT-ISU-004-001-029 */
+    public function testAddSelectRendererRegistersCallable(): void
+    {
+        $config = new ModuleConfig('t', 'm');
+        $result = $config->addSelectRenderer();
+
+        $this->assertSame($result, $config);
+        $this->assertNotNull($config->getRenderer('select'));
+    }
+
+    /** @BABOK Related: UT-ISU-004-001-030 */
+    public function testAddCheckboxRendererRegistersCallable(): void
+    {
+        $config = new ModuleConfig('t', 'm');
+        $result = $config->addCheckboxRenderer('check');
+
+        $this->assertSame($result, $config);
+        $this->assertNotNull($config->getRenderer('check'));
+    }
+
+    /** @BABOK Related: UT-ISU-004-001-031 */
+    public function testRendererOverridesBuiltIn(): void
+    {
+        $config = new ModuleConfig('t', 'm');
+        $original = $config->getRenderer('text');
+        $custom = function () {};
+        $config->addRenderer('text', $custom);
+
+        $this->assertSame($custom, $config->getRenderer('text'));
+        $this->assertNotSame($original, $config->getRenderer('text'));
+    }
+
+    /** @BABOK Related: UT-ISU-004-001-032 */
+    public function testConstructorMergesFieldAndRendererArrays(): void
+    {
+        $fn = function () {};
+        $config = new ModuleConfig(
+            't',
+            'm',
+            [['name' => 'x', 'label' => 'X', 'type' => 'custom']],
+            ['custom' => $fn]
+        );
+
+        $this->assertSame('custom', $config->getFields()['x']['type']);
+        $this->assertSame($fn, $config->getRenderer('custom'));
+    }
 }
