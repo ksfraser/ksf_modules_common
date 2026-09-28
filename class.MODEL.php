@@ -16,6 +16,14 @@ $path_to_faroot = dirname ( realpath ( __FILE__ ) ) . "/../../";
  * Inherits:
  * Provides:
  * *****************************************************************************/
+/**
+ * @deprecated Since 2.0.0 - Uses tell_eventloop() which is part of the deprecated eventloop class.
+ * Use ksfraser/event PSR-14 event system instead (ksfraser/event package).
+ * For FA integration, use FA hooks (hook_invoke_all) via ksf_FA_EventLoop module.
+ *
+ * @see ksfraser/event\EventManager
+ * @see ksf_FA_EventLoop FA bridge module for hook integration
+ */
 class MODEL extends origin
 {
 	var $client;

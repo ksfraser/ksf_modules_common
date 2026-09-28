@@ -201,8 +201,8 @@ define( 'KSF_MODULE_ACCESS_DENIED', 573620 );
 define( 'KSF_MODULE_ACCESS_READ', 573621 );
 define( 'KSF_MODULE_ACCESS_WRITE', 573622 );
 define( 'KSF_MODULE_ACCESS_READWRITE', 573623 );
-define( 'KSF_MAX_MODULES', 10 );        //Fixing modarray and tabarray sizes in eventloop.  Of course we could always detect that this is defined, undefine, and redefine if we need more
-define( 'KSF_MAX_LOADPRIORITY', KSF_MAX_MODULES * 2 );  //Fixing modarray and tabarray sizes in eventloop.  Of course we could always detect that this is defined, undefine, and redefine if we need more
+define( 'KSF_MAX_MODULES', 10 );        //@deprecated Since 2.0.0 - Was used for modarray and tabarray sizes in deprecated eventloop class. Use ksfraser/eventloop instead.
+define( 'KSF_MAX_LOADPRIORITY', KSF_MAX_MODULES * 2 );  //@deprecated Since 2.0.0 - Was used for modarray and tabarray sizes in deprecated eventloop class. Use ksfraser/eventloop instead.
 
 /****************************************************************************//**
 * Frontaccounting Specific

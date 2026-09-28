@@ -4,6 +4,14 @@ $path_to_root="../..";
 
 require_once( 'class.origin.php' );
 
+/**
+ * @deprecated Since 2.0.0 - This class name conflicts with the deprecated eventloop class.
+ * Use ksfraser/event PSR-14 event system instead for event handling.
+ * For FA integration, use FA hooks (hook_invoke_all).
+ *
+ * @see ksfraser/event\EventManager
+ * @see ksf_FA_EventLoop FA bridge module for hook integration
+ */
 class eventloop extends origin
 {
 

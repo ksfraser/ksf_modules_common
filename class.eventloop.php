@@ -35,7 +35,17 @@ $configArray = array();
  * 
  *
  * ********************************************************************************************/
-class eventloop extends origin
+/**
+ * @deprecated Since 2.0.0 - Use ksfraser/eventloop PSR-14 event system instead.
+ * This class is retained for backward compatibility but will be removed in a future release.
+ * For FA integration, use FA hooks (hook_invoke_all). For standalone use, use ksfraser/eventloop
+ * with add_action/do_action patterns.
+ *
+ * @see ksfraser/eventloop EventManager with addEvent/executeEvent
+ * @see ksfraser/event EventManager with addListener/dispatchEvent
+ * @see ksf_FA_EventLoop FA bridge module for hook integration
+ */
+@deprecated class eventloop extends origin
 {
 	var $config_values = array();   //What fields to be put on config screen
 	var $tabs = array();

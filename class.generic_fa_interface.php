@@ -138,9 +138,22 @@ if( ! class_exists( 'generic_fa_interface' ) )
 			//display_notification( __FILE__ . "::" . __CLASS__ . "::"  . __METHOD__ . ":" . __LINE__, "WARN" );
 		//display_notification( __FILE__ . "::" . __LINE__ );
 		}
+		/**
+		 * @deprecated Since 2.0.0 - Use ksfraser/eventloop globalfunctions.php add_action/do_action
+		 * instead for new code. For FA integration, use FA hooks (hook_invoke_all).
+		 *
+		 * @see ksfraser/eventloop\add_action()
+		 * @see ksfraser/eventloop\do_action()
+		 */
 		function eventloop( $event, $method )
 		{
 		}
+		/**
+		 * @deprecated Since 2.0.0 - Use ksfraser/eventloop globalfunctions.php register_trigger
+		 * instead for new code.
+		 *
+		 * @see ksfraser/eventloop\register_trigger()
+		 */
 		function eventregister( $event, $method )
 		{
 		}
